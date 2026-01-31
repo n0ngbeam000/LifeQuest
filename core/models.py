@@ -11,7 +11,7 @@ class UserProfile(models.Model):
     
     def get_next_level_exp(self):
         """สูตรคำนวณ EXP ที่ต้องใช้: เลเวลปัจจุบัน * 100"""
-        return self.level * 100
+        return self.level * 123
 
     def check_level_up(self):
         """เช็คว่า EXP เกินหลอดหรือยัง ถ้าเกินให้ Level Up"""
