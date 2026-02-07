@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm
+from .models import Task, UserProfile
 # --- Auth views ---
 def register_view(request) : 
     if request.method == 'POST':
@@ -58,4 +59,43 @@ def dashboard_view(request):
         'next_level_exp': next_level_exp,
     }
     return render(request, 'core/dashboard.html',context)
+@login_required
+def add_task(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        difficulty = request.POST.get('difficulty')
 
+        if title:
+            Task.objects.create(
+                user = request.user,
+                title = title,
+                difficulty = difficulty
+            )
+            messages.success(request, 'New Quest Added!')
+    return redirect('dashboard')
+
+@login_required
+def complete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user = request.user)
+    
+    if task.status == 'pending':
+        task.status = 'complete'
+        task.save()
+
+        profile = request.user.profile
+        profile.exp += task.difficulty
+
+        if profile.check_level_up():
+            messages.success(request, f'LEVEL UP! You reached level {profile.level}!')
+        else :
+            messages.success(request, f'Quest Complete! +{task.difficulty} EXP')
+        
+        profile.save()
+    return redirect('dashboard')
+
+@login_required
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    task.delete()
+    messages.info(request 'Quest deleted.')
+    return redirect('dashboard')
