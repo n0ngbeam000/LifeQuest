@@ -45,8 +45,8 @@ def login_view(request):
 def dashboard_view(request):
     user = request.user
     #
-    active_tasks = Task.objects.filter(user=user, status='pending').order_by('create_at')
-    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-create_at')[:5] # get the least of 5 task
+    active_tasks = Task.objects.filter(user=user, status='pending').order_by('created_at')
+    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-created_at')[:5] # get the least of 5 task
 
     profile = user.profile
     next_level_exp = profile.get_next_level_exp()
