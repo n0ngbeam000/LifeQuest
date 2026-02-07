@@ -51,12 +51,14 @@ def dashboard_view(request):
     profile = user.profile
     next_level_exp = profile.get_next_level_exp()
     xp_percentage = (profile.exp / next_level_exp) * 100 ## i don't want it baby
+    exp_remaining = next_level_exp - profile.exp
 
     context = {
         'active_tasks': active_tasks,
         'complete_tasks': complete_tasks,
         'xp_percentage': xp_percentage,
         'next_level_exp': next_level_exp,
+        'exp_remaining': exp_remaining,
     }
     return render(request, 'core/dashboard.html',context)
 @login_required
