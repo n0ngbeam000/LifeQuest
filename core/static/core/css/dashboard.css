@@ -7,9 +7,9 @@
 
 /* ========== ROOT VARIABLES ========== */
 :root {
-    --bg-main: #1e1f2b;
-    --bg-sidebar: #15161e;
-    --bg-card: #2a2b3d;
+    --bg-main: #1c1f31;
+    --bg-sidebar: #282c47;
+    --bg-card: #282c47;
     --accent-gold: #ffc107;
     --text-primary: #ffffff;
     --text-muted: #aab2bd;
@@ -97,6 +97,7 @@ body {
     border-right: 1px solid rgba(255, 193, 7, 0.1);
     overflow-y: auto;
     overflow-x: hidden;
+    text-align: center;
 }
 
 .main-content {
@@ -123,24 +124,23 @@ body {
 
 .sidebar::-webkit-scrollbar-thumb,
 .main-content::-webkit-scrollbar-thumb {
-    background: rgba(255, 193, 7, 0.2);
+    background: rgba(43, 52, 94, 0.2);
     border-radius: 3px;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover,
 .main-content::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 193, 7, 0.4);
+    background: rgba(85, 86, 151, 0.4);
 }
 
 /* ========== SIDEBAR: PROFILE SECTION ========== */
+
 .profile-section {
     text-align: center;
-    width: 100%;
-    margin-bottom: 30px;
-    padding: 20px;
-    background: linear-gradient(135deg, rgba(100, 89, 164, 0.1), rgba(156, 39, 176, 0.05));
-    border-radius: 12px;
-    border: 1px solid rgba(156, 39, 176, 0.2);
+    width: 15rem;
+    height: 30.2rem;
+    margin-bottom: 0px;
+    padding: 0px;
 }
 
 .profile-title {
@@ -156,6 +156,7 @@ body {
 .avatar-container {
     margin-bottom: 20px;
     position: relative;
+    justify-content: center;
 }
 
 .profile-avatar {
@@ -167,6 +168,8 @@ body {
     object-fit: cover;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 .profile-avatar:hover {
@@ -179,7 +182,6 @@ body {
     font-size: 2.5rem;
     font-weight: 600;
     color: var(--text-primary);
-    margin: 15px 0;
     letter-spacing: 0.5px;
 }
 
@@ -187,15 +189,15 @@ body {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
+    width: 80px;
+    height: 40px;
+    border-radius: 10%;
     background: linear-gradient(135deg, var(--accent-gold), #ffb300);
     color: #333;
     font-family: 'VT323', monospace;
     font-size: 1.6rem;
     font-weight: bold;
-    margin: 15px 0;
+    margin: 0px 0;
     box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
     letter-spacing: 1px;
 }
@@ -311,7 +313,7 @@ body {
 }
 
 .logout-btn {
-    width: 100%;
+    width: 100px;
     margin-top: 30px;
     padding: 12px;
     background-color: rgba(255, 109, 107, 0.1);
@@ -320,7 +322,7 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    font-weight: 600;
+    font-weight: 700;
 }
 
 .logout-btn:hover {
