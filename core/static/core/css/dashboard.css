@@ -468,6 +468,12 @@ body {
     color: var(--accent-gold);
 }
 
+.quest-checkbox.completed-check {
+    border-color: var(--difficulty-easy);
+    background-color: rgba(46, 204, 113, 0.2);
+    cursor: default;
+}
+
 .quest-item:hover .quest-checkbox {
     border-color: var(--accent-gold);
     background-color: rgba(255, 193, 7, 0.1);

@@ -62,7 +62,7 @@
             <div class="nav-item" title="Completed quests">
                 <i class="fas fa-check-circle"></i>
                 <span>Completed</span>
-                <span class="nav-count">{{ complete_tasks.count }}</span>
+                <span class="nav-count">{{ completed_count }}</span>
             </div>
             
         </nav>
@@ -174,22 +174,48 @@
             {% endif %}
             
             <!-- Completed Quests Section -->
-            {% if complete_tasks %}
+            {% if completed_tasks %}
                 <h3 class="completed-section-title">
-                    <i class="fas fa-check-circle"></i> Completed History
+                    <i class="fas fa-check-circle"></i> Completed ({{ completed_count }})
                 </h3>
                 
                 <div class="completed-list">
-                    {% for task in complete_tasks %}
-                    <div class="quest-item completed border-easy">
+                    {% for task in completed_tasks %}
+                    <div class="quest-item completed 
+                        {% if task.difficulty == 10 %}border-easy
+                        {% elif task.difficulty == 30 %}border-medium
+                        {% else %}border-hard{% endif %}">
+                        
+                        <!-- Checkmark Icon -->
+                        <div class="quest-checkbox completed-check">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        
+                        <!-- Quest Info -->
                         <div class="quest-info">
                             <span class="quest-title">{{ task.title }}</span>
                             <div class="quest-meta">
-                                <span class="quest-badge easy">✓ COMPLETED</span>
+                                {% if task.difficulty == 50 %}
+                                    <span class="quest-badge hard">⚔ HARD</span>
+                                {% elif task.difficulty == 30 %}
+                                    <span class="quest-badge medium">⚡ MEDIUM</span>
+                                {% else %}
+                                    <span class="quest-badge easy">✓ EASY</span>
+                                {% endif %}
                                 <span class="quest-timestamp">{{ task.created_at|date:"M d, h:i A" }}</span>
                             </div>
                         </div>
-                        <div class="quest-xp">+{{ task.difficulty }} XP</div>
+                        
+                        <!-- Actions -->
+                        <div class="quest-actions">
+                            <span class="quest-xp">+{{ task.difficulty }} XP</span>
+                            <a href="{% url 'delete_task' task.id %}" 
+                               class="btn-delete"
+                               data-action="delete"
+                               title="Delete quest">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>

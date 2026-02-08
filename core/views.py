@@ -46,7 +46,8 @@ def dashboard_view(request):
     user = request.user
     #
     active_tasks = Task.objects.filter(user=user, status='pending').order_by('created_at')
-    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-created_at')[:5] # get the least of 5 task
+    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-created_at')[:3] # get the least of 3 task
+    completed_count = Task.objects.filter(user=user ,status='completed').count()
 
     profile = user.profile
     next_level_exp = profile.get_next_level_exp()
@@ -55,7 +56,8 @@ def dashboard_view(request):
 
     context = {
         'active_tasks': active_tasks,
-        'complete_tasks': complete_tasks,
+        'completed_tasks': complete_tasks,
+        'completed_count': completed_count,
         'xp_percentage': xp_percentage,
         'next_level_exp': next_level_exp,
         'exp_remaining': exp_remaining,
@@ -81,7 +83,7 @@ def complete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id, user = request.user)
     
     if task.status == 'pending':
-        task.status = 'complete'
+        task.status = 'completed'
         task.save()
 
         profile = request.user.profile
