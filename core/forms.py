@@ -15,7 +15,7 @@ class RegisterForm(forms.ModelForm):
         email = self.cleaned_data.get('email')
         
         # ตรวจสอบ email pattern - extension ต้องอย่างน้อย 3 ตัวอักษร (com, org, co.th ฯลฯ)
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{3,}$'
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         
         if not re.match(email_pattern, email):
             raise forms.ValidationError('กรุณากรอก email ให้ถูกต้อง (เช่น example@gmail.com)')

@@ -373,6 +373,22 @@ body {
     border-color: rgba(255, 193, 7, 0.2);
 }
 
+/* Fix for select dropdown options visibility */
+.form-select option {
+    background-color: #1c1f31;
+    color: var(--text-primary);
+    padding: 10px;
+}
+
+.form-select option:checked {
+    background: linear-gradient(#1c1f31, #1c1f31);
+    background-color:var(--bg-sidebar);
+    color: #ffffff;
+}
+
+/* .form-select option:hover {
+    
+} */
 .btn-create {
     background-color: var(--accent-gold);
     color: var(--bg-main);
