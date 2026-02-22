@@ -32,6 +32,22 @@ class UserProfile(models.Model):
         else:
             return 'images/avatars/graduate.png'    # เลเวล 16+: ชุดครุย
 
+    def remove_exp(self, amount):
+        """หัก EXP ออก และจัดการ Level Down ถ้า EXP ติดลบ"""
+        self.exp -= amount
+
+        # Level Down loop: ถ้า EXP ติดลบและยังไม่ถึง Lv1
+        while self.exp < 0 and self.level > 1:
+            self.level -= 1
+            max_exp_this_level = self.level * 123  # same formula as get_next_level_exp
+            self.exp += max_exp_this_level
+
+        # Safety net: ไม่ให้ต่ำกว่า Lv1 / 0 XP
+        if self.level == 1 and self.exp < 0:
+            self.exp = 0
+
+        self.save()
+
     def __str__(self):
         return f"{self.user.username} - Lv {self.level}"
 

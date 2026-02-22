@@ -103,3 +103,15 @@ def delete_task(request, task_id):
     task.delete()
     messages.info(request, 'Quest deleted.')
     return redirect('dashboard')
+
+@login_required
+def uncomplete_task(request, task_id):
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+
+    if task.status == 'completed':
+        request.user.profile.remove_exp(task.difficulty)
+        task.status = 'pending'
+        task.save()
+        messages.success(request, f'Task reverted! -{task.difficulty} EXP.')
+
+    return redirect('dashboard')

@@ -3,15 +3,15 @@
    Toast Notifications & Interactivity
    ======================================== */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     console.log('✓ Dashboard initialized');
-    
+
     // Initialize Toast Notifications
     initializeToasts();
-    
+
     // Initialize Event Listeners
     initializeEventListeners();
-    
+
     // Initialize Bootstrap Tooltips
     initializeTooltips();
 });
@@ -26,12 +26,12 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function showToast(message, type = 'info', duration = 3000) {
     const container = getToastContainer();
-    
+
     // Determine icon based on type
     let icon = 'ℹ';
     if (type === 'success') icon = '✓';
     if (type === 'error') icon = '✕';
-    
+
     // Create toast element
     const toast = document.createElement('div');
     toast.className = `toast-notification ${type}`;
@@ -39,9 +39,9 @@ function showToast(message, type = 'info', duration = 3000) {
         <span class="toast-icon">${icon}</span>
         <span class="toast-message">${message}</span>
     `;
-    
+
     container.appendChild(toast);
-    
+
     // Auto-dismiss
     setTimeout(() => {
         toast.classList.add('removing');
@@ -55,13 +55,13 @@ function showToast(message, type = 'info', duration = 3000) {
  */
 function getToastContainer() {
     let container = document.querySelector('.toast-container');
-    
+
     if (!container) {
         container = document.createElement('div');
         container.className = 'toast-container';
         document.body.appendChild(container);
     }
-    
+
     return container;
 }
 
@@ -71,12 +71,12 @@ function getToastContainer() {
 function initializeToasts() {
     // Convert Django messages to toasts and remove them
     const alerts = document.querySelectorAll('.alert');
-    
+
     alerts.forEach(alert => {
         const message = alert.textContent.trim();
         const type = alert.classList.contains('alert-success') ? 'success' :
-                     alert.classList.contains('alert-error') ? 'error' : 'info';
-        
+            alert.classList.contains('alert-error') ? 'error' : 'info';
+
         showToast(message, type, 4000);
         alert.remove();
     });
@@ -88,7 +88,7 @@ function initializeEventListeners() {
     // Complete task buttons
     const completeButtons = document.querySelectorAll('[data-action="complete"]');
     completeButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             const taskTitle = this.dataset.taskTitle || 'Task';
             this.style.opacity = '0.6';
@@ -97,22 +97,22 @@ function initializeEventListeners() {
             }, 200);
         });
     });
-    
+
     // Delete task buttons
     const deleteButtons = document.querySelectorAll('[data-action="delete"]');
     deleteButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
+        btn.addEventListener('click', function (e) {
             e.preventDefault();
             if (confirm('Are you sure you want to delete this quest?')) {
                 window.location.href = this.href;
             }
         });
     });
-    
+
     // Logout form
     const logoutForm = document.querySelector('form[data-action="logout"]');
     if (logoutForm) {
-        logoutForm.addEventListener('submit', function() {
+        logoutForm.addEventListener('submit', function () {
             const btn = this.querySelector('button[type="submit"]');
             if (btn) {
                 btn.innerHTML = '⏳ Logging out...';
@@ -120,11 +120,11 @@ function initializeEventListeners() {
             }
         });
     }
-    
+
     // Task form submission
     const taskForm = document.querySelector('form[data-action="add-task"]');
     if (taskForm) {
-        taskForm.addEventListener('submit', function() {
+        taskForm.addEventListener('submit', function () {
             const btn = this.querySelector('button[type="submit"]');
             if (btn) {
                 btn.innerHTML = '➕ Adding...';
@@ -168,7 +168,7 @@ function animateCounter(element, target, duration = 500) {
     const start = parseInt(element.textContent) || 0;
     const increment = (target - start) / (duration / 16);
     let current = start;
-    
+
     const timer = setInterval(() => {
         current += increment;
         if (current >= target) {
@@ -191,14 +191,14 @@ function formatNumber(num) {
 
 /* ========== KEYBOARD SHORTCUTS ========== */
 
-document.addEventListener('keydown', function(e) {
+document.addEventListener('keydown', function (e) {
     // Ctrl/Cmd + K: Focus task input
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         const taskInput = document.querySelector('input[name="title"]');
         if (taskInput) taskInput.focus();
     }
-    
+
     // Escape: Close any dropdowns or modals
     if (e.key === 'Escape') {
         console.log('Escape pressed');
@@ -217,7 +217,7 @@ function observeScrollAnimations() {
                 }
             });
         }, { threshold: 0.1 });
-        
+
         document.querySelectorAll('.quest-item').forEach(item => {
             observer.observe(item);
         });
