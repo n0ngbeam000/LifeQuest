@@ -71,11 +71,12 @@ class Task(models.Model):
         ('completed', 'Completed'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # ผูกงานกับ User คนนั้นๆ
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     difficulty = models.IntegerField(choices=DIFFICULTY_CHOICES, default=10)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)  # set when task is completed
 
     def __str__(self):
         return f"{self.title} ({self.get_difficulty_display()})"

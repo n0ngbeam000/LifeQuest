@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -84,6 +85,7 @@ def complete_task(request, task_id):
     
     if task.status == 'pending':
         task.status = 'completed'
+        task.completed_at = timezone.now()
         task.save()
 
         profile = request.user.profile
@@ -91,9 +93,9 @@ def complete_task(request, task_id):
 
         if profile.check_level_up():
             messages.success(request, f'LEVEL UP! You reached level {profile.level}!')
-        else :
+        else:
             messages.success(request, f'Quest Complete! +{task.difficulty} EXP')
-        
+
         profile.save()
     return redirect('dashboard')
 
@@ -111,6 +113,7 @@ def uncomplete_task(request, task_id):
     if task.status == 'completed':
         request.user.profile.remove_exp(task.difficulty)
         task.status = 'pending'
+        task.completed_at = None
         task.save()
         messages.success(request, f'Task reverted! -{task.difficulty} EXP.')
 

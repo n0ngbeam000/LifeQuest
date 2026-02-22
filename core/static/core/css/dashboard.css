@@ -503,8 +503,15 @@ body {
 .quest-board {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 16px;
     flex: 1;
+}
+
+.quest-list,
+.completed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 /* ===== QUEST ITEM ===== */
@@ -515,7 +522,8 @@ body {
     background: var(--bg-card);
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    padding: 16px 18px;
+    padding: 20px 22px;
+
     transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
     animation: slideInUp 0.35s ease-out;
 }

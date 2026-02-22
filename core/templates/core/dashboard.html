@@ -203,7 +203,7 @@
                                 {% endif %}
                                 <span class="quest-timestamp">
                                     <i class="far fa-clock"></i>
-                                    Completed: {{ task.created_at|date:"M d, h:i A" }}
+                                    Completed: {{ task.completed_at|date:"M d, h:i A"|default:task.created_at|date:"M d, h:i A" }}
                                 </span>
                             </div>
                         </div>

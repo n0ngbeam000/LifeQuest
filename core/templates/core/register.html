@@ -7,7 +7,7 @@
   <title>Register — LifeQuest</title>
 
   <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- Auth CSS -->
@@ -16,29 +16,17 @@
 
 <body class="auth-page">
 
-  <!-- Animated Particle Canvas -->
-  <canvas id="particles-canvas" aria-hidden="true"></canvas>
-
   <div class="auth-wrapper" style="max-width: 480px;">
     <div class="auth-card">
 
-      <!-- Floating Sparkles -->
-      <div class="sparkles-wrap" aria-hidden="true">
-        <span class="sparkle" style="left:6%;  top:25%; --dur:4.0s; --delay:0s;">✨</span>
-        <span class="sparkle" style="left:90%; top:20%; --dur:3.6s; --delay:0.9s;">✨</span>
-        <span class="sparkle" style="left:15%; top:80%; --dur:5.2s; --delay:1.5s;">⭐</span>
-        <span class="sparkle" style="left:80%; top:70%; --dur:3.8s; --delay:2.3s;">✨</span>
-        <span class="sparkle" style="left:48%; top:8%;  --dur:4.3s; --delay:0.5s;">⭐</span>
-      </div>
-
       <!-- Controller Icon -->
       <div class="controller-icon" aria-hidden="true">
-        <i class="fa-solid fa-person-running"></i>
+        <i class="fa-solid fa-gamepad"></i>
       </div>
 
       <!-- Title -->
-      <h1 class="auth-title">CREATE CHARACTER</h1>
-      <p class="auth-subtitle">Begin your quest ✦</p>
+      <h1 class="auth-title">LIFEQUEST</h1>
+      <p class="auth-subtitle">Create your account</p>
 
       <!-- Django Messages -->
       {% if messages %}
@@ -143,7 +131,7 @@
 
         <!-- Submit -->
         <button type="submit" class="btn-quest">
-          ⚔ START ADVENTURE ⚔
+          <i class="fa-solid fa-user-plus" style="margin-right:8px;"></i>Create Account
         </button>
       </form>
 

@@ -6,8 +6,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login — LifeQuest</title>
 
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <!-- Fonts & Icons (VT323 + Poppins, same as Dashboard) -->
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
   <!-- Auth CSS -->
@@ -16,30 +16,17 @@
 
 <body class="auth-page">
 
-  <!-- Animated Particle Canvas -->
-  <canvas id="particles-canvas" aria-hidden="true"></canvas>
-
   <div class="auth-wrapper">
     <div class="auth-card">
 
-      <!-- Floating Sparkles -->
-      <div class="sparkles-wrap" aria-hidden="true">
-        <span class="sparkle" style="left:8%;  top:30%; --dur:3.8s; --delay:0s;">✨</span>
-        <span class="sparkle" style="left:88%; top:18%; --dur:4.5s; --delay:0.7s;">✨</span>
-        <span class="sparkle" style="left:20%; top:78%; --dur:5.0s; --delay:1.2s;">⭐</span>
-        <span class="sparkle" style="left:76%; top:65%; --dur:3.2s; --delay:2.0s;">✨</span>
-        <span class="sparkle" style="left:50%; top:10%; --dur:4.0s; --delay:0.4s;">⭐</span>
-        <span class="sparkle" style="left:35%; top:88%; --dur:5.5s; --delay:1.8s;">✨</span>
-      </div>
-
-      <!-- Controller Icon -->
+      <!-- Brand Icon -->
       <div class="controller-icon" aria-hidden="true">
         <i class="fa-solid fa-gamepad"></i>
       </div>
 
       <!-- Title -->
-      <h1 class="auth-title">LOGIN</h1>
-      <p class="auth-subtitle">Continue your adventure ✦</p>
+      <h1 class="auth-title">LIFEQUEST</h1>
+      <p class="auth-subtitle">Continue your adventure</p>
 
       <!-- Django Messages -->
       {% if messages %}
@@ -93,15 +80,15 @@
 
         <!-- Submit -->
         <button type="submit" class="btn-quest">
-          ⚔ ENTER THE QUEST ⚔
+          <i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>ENTER THE QUEST
         </button>
       </form>
 
       <div class="auth-divider">or</div>
 
       <p class="auth-footer">
-        Haven't got an account?
-        <a href="{% url 'register' %}" class="auth-link">Create an account</a>
+        Don't have an account?
+        <a href="{% url 'register' %}" class="auth-link">Create one</a>
       </p>
 
     </div><!-- .auth-card -->
