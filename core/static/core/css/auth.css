@@ -1,0 +1,373 @@
+/* ===================================================
+   LifeQuest — Auth Pages (auth.css)
+   Modern Dark Navy · Matches Dashboard Design System
+   =================================================== */
+
+/* ---------- Google Fonts ---------- */
+@import url('https://fonts.googleapis.com/css2?family=VT323&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* ---------- CSS Variables (mirrors dashboard.css) ---------- */
+:root {
+  /* Core palette — identical to dashboard */
+  --bg-main: #1c1f31;
+  --bg-sidebar: #22263a;
+  --bg-card: #282c47;
+  --bg-card-hover: #2e3354;
+  --accent-gold: #ffc107;
+  --accent-gold-dark: #e6a800;
+  --text-primary: #ffffff;
+  --text-muted: #8891a5;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --danger: #ff6b6b;
+  --success: #2ecc71;
+
+  /* Auth-specific tokens */
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-border: var(--border-subtle);
+  --input-focus-bg: rgba(255, 255, 255, 0.07);
+  --input-focus-border: rgba(255, 193, 7, 0.4);
+
+  --card-bg: #22263a;
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Reset ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- Body / Background ---------- */
+body.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+  position: relative;
+
+  /* Deep navy base — same as dashboard --bg-main */
+  background-color: var(--bg-main);
+}
+
+/* ---------- Subtle Dot Grid Background ---------- */
+body.auth-page::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle,
+      rgba(255, 255, 255, 0.07) 1px,
+      transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 30%, transparent 100%);
+}
+
+/* ---------- Ambient corner glows (dark-teal/gold) ---------- */
+body.auth-page::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 55% 45% at 0% 0%, rgba(30, 60, 120, 0.25) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 40% at 100% 100%, rgba(255, 193, 7, 0.06) 0%, transparent 65%);
+}
+
+/* ---------- Page Wrapper ---------- */
+.auth-wrapper {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 440px;
+  padding: 16px;
+  animation: fadeSlideUp 0.45s ease-out;
+}
+
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Auth Card ---------- */
+.auth-card {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 40px 36px 32px;
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+}
+
+/* Thin top-edge accent line */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(to right,
+      transparent,
+      rgba(255, 193, 7, 0.35),
+      transparent);
+}
+
+/* ---------- Brand Icon ---------- */
+.controller-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 18px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 193, 7, 0.25);
+  background: rgba(255, 193, 7, 0.10);
+  font-size: 26px;
+  color: var(--accent-gold);
+  /* No heavy glow — just a soft, contained shadow */
+  box-shadow: 0 4px 16px rgba(255, 193, 7, 0.18);
+}
+
+/* ---------- Card Header ---------- */
+.auth-title {
+  font-family: 'VT323', monospace;
+  font-size: clamp(26px, 5vw, 32px);
+  color: var(--text-primary);
+  text-align: center;
+  letter-spacing: 2px;
+  margin-bottom: 4px;
+  /* No text-shadow glow */
+}
+
+.auth-subtitle {
+  font-family: 'Poppins', sans-serif;
+  font-size: 13px;
+  color: var(--text-muted);
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+/* ---------- Messages / Alert ---------- */
+.auth-alert {
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border-left: 3px solid;
+}
+
+.auth-alert.alert-success {
+  background: rgba(46, 204, 113, 0.1);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.auth-alert.alert-error {
+  background: rgba(255, 107, 107, 0.1);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.auth-alert.alert-info {
+  background: rgba(255, 193, 7, 0.1);
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* ---------- Form ---------- */
+.auth-form {
+  position: relative;
+  z-index: 1;
+}
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-label {
+  display: block;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 7px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.form-input {
+  width: 100%;
+  padding: 11px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.form-input::placeholder {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.form-input:focus {
+  border-color: var(--input-focus-border);
+  background: var(--input-focus-bg);
+  /* Clean, flat focus — no neon glow ring */
+}
+
+/* Make room for eye toggle */
+.input-wrapper.has-toggle .form-input {
+  padding-right: 42px;
+}
+
+/* Password eye toggle */
+.pw-toggle {
+  position: absolute;
+  right: 14px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0;
+  font-size: 14px;
+  opacity: 0.8;
+  transition: opacity 0.2s, color 0.2s;
+  line-height: 1;
+}
+
+.pw-toggle:hover {
+  opacity: 1;
+  color: var(--accent-gold);
+}
+
+/* Form error */
+.form-error {
+  font-size: 11px;
+  color: var(--danger);
+  margin-top: 5px;
+  padding-left: 4px;
+}
+
+/* ---------- Submit Button (mirrors .btn-create from dashboard) ---------- */
+.btn-quest {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 8px;
+  background: var(--accent-gold);
+  border: none;
+  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1a1a1a;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.btn-quest:hover {
+  background: var(--accent-gold-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 193, 7, 0.28);
+}
+
+.btn-quest:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* ---------- Divider ---------- */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 18px;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+/* ---------- Footer Link ---------- */
+.auth-footer {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+}
+
+.auth-link {
+  color: var(--accent-gold);
+  text-decoration: none;
+  font-weight: 600;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.auth-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent-gold);
+  transition: width 0.3s ease;
+}
+
+.auth-link:hover {
+  color: #ffe066;
+}
+
+.auth-link:hover::after {
+  width: 100%;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+  .auth-card {
+    padding: 30px 22px 26px;
+  }
+
+  .auth-title {
+    font-size: 24px;
+  }
+}
