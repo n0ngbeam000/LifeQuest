@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
@@ -65,56 +67,129 @@ def dashboard_view(request):
     }
     return render(request, 'core/dashboard.html',context)
 @login_required
+@require_POST
 def add_task(request):
-    if request.method == 'POST':
-        title = request.POST.get('title')
-        difficulty = request.POST.get('difficulty')
+    title = request.POST.get('title', '').strip()
+    difficulty = request.POST.get('difficulty', '10')
 
-        if title:
-            Task.objects.create(
-                user = request.user,
-                title = title,
-                difficulty = difficulty
-            )
-            messages.success(request, 'New Quest Added!')
-    return redirect('dashboard')
+    if not title:
+        return JsonResponse({'status': 'error', 'message': 'Title is required.'}, status=400)
+
+    # Validate difficulty is one of the allowed values
+    allowed = {10, 30, 50}
+    try:
+        difficulty = int(difficulty)
+        if difficulty not in allowed:
+            raise ValueError
+    except (ValueError, TypeError):
+        return JsonResponse({'status': 'error', 'message': 'Invalid difficulty.'}, status=400)
+
+    task = Task.objects.create(
+        user=request.user,
+        title=title,
+        difficulty=difficulty,
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'quest': {
+            'id': task.id,
+            'title': task.title,
+            'difficulty': task.difficulty,
+            'created_at': task.created_at.strftime('%b %d, %I:%M %p'),
+        },
+    })
 
 @login_required
+@require_POST
 def complete_task(request, task_id):
-    task = get_object_or_404(Task, id=task_id, user = request.user)
-    
-    if task.status == 'pending':
-        task.status = 'completed'
-        task.completed_at = timezone.now()
-        task.save()
+    task = get_object_or_404(Task, id=task_id, user=request.user)
 
-        profile = request.user.profile
-        profile.exp += task.difficulty
+    if task.status != 'pending':
+        return JsonResponse({'status': 'error', 'message': 'Task already completed.'}, status=400)
 
-        if profile.check_level_up():
-            messages.success(request, f'LEVEL UP! You reached level {profile.level}!')
-        else:
-            messages.success(request, f'Quest Complete! +{task.difficulty} EXP')
+    task.status = 'completed'
+    task.completed_at = timezone.now()
+    task.save()
 
-        profile.save()
-    return redirect('dashboard')
+    profile = request.user.profile
+    profile.exp += task.difficulty
+    leveled_up = profile.check_level_up()
+    profile.save()
+
+    next_level_exp = profile.get_next_level_exp()
+    exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
+
+    return JsonResponse({
+        'status': 'success',
+        'quest_id': task.id,
+        'quest': {
+            'id': task.id,
+            'title': task.title,
+            'difficulty': task.difficulty,
+            'completed_at': task.completed_at.strftime('%b %d, %I:%M %p'),
+        },
+        'new_exp': profile.exp,
+        'new_level': profile.level,
+        'exp_percentage': exp_percentage,
+        'next_level_exp': next_level_exp,
+        'leveled_up': leveled_up,
+        'xp_gained': task.difficulty,
+    })
 
 @login_required
+@require_POST
 def delete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
     task.delete()
-    messages.info(request, 'Quest deleted.')
-    return redirect('dashboard')
+    return JsonResponse({'status': 'success', 'quest_id': task_id})
 
 @login_required
+@require_POST
 def uncomplete_task(request, task_id):
     task = get_object_or_404(Task, id=task_id, user=request.user)
 
-    if task.status == 'completed':
-        request.user.profile.remove_exp(task.difficulty)
-        task.status = 'pending'
-        task.completed_at = None
-        task.save()
-        messages.success(request, f'Task reverted! -{task.difficulty} EXP.')
+    if task.status != 'completed':
+        return JsonResponse({'status': 'error', 'message': 'Task is not completed.'}, status=400)
 
-    return redirect('dashboard')
+    profile = request.user.profile
+    profile.remove_exp(task.difficulty)
+
+    task.status = 'pending'
+    task.completed_at = None
+    task.save()
+
+    next_level_exp = profile.get_next_level_exp()
+    exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
+
+    # After this undo the completed list shows at most 3 tasks.
+    # Fetch the 3rd remaining completed task (index 2) so the frontend
+    # can append it and keep the visible list full.
+    next_completed = None
+    replacement = Task.objects.filter(
+        user=request.user, status='completed'
+    ).order_by('-completed_at')[2:3].first()
+    if replacement:
+        next_completed = {
+            'id': replacement.id,
+            'title': replacement.title,
+            'difficulty': replacement.difficulty,
+            'completed_at': replacement.completed_at.strftime('%b %d, %I:%M %p'),
+        }
+
+    return JsonResponse({
+        'status': 'success',
+        'quest_id': task.id,
+        'quest': {
+            'id': task.id,
+            'title': task.title,
+            'difficulty': task.difficulty,
+            'created_at': task.created_at.strftime('%b %d, %I:%M %p'),
+        },
+        'next_completed': next_completed,
+        'new_exp': profile.exp,
+        'new_level': profile.level,
+        'exp_percentage': exp_percentage,
+        'next_level_exp': next_level_exp,
+        'xp_lost': task.difficulty,
+    })
