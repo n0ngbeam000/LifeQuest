@@ -32,6 +32,7 @@ urlpatterns = [
     path('complete/<int:task_id>/', views.complete_task, name='complete_task'),
     path('delete/<int:task_id>/', views.delete_task, name='delete_task'),
     path('uncomplete_task/<int:task_id>/', views.uncomplete_task, name='uncomplete_task'),
+    path('leaderboard/', views.leaderboard_view, name='leaderboard'),
 
     path('accounts/', include('allauth.urls')),
 ]

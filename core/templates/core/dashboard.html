@@ -86,10 +86,15 @@
         {% endif %}
 
         <!-- Quest Board Header -->
-        <h1 class="quest-header">
-            <span class="header-icon"><i class="fas fa-trophy"></i></span>
-            Quest Board
-        </h1>
+        <div class="quest-board-header">
+            <h1 class="quest-header">
+                <span class="header-icon"><i class="fas fa-trophy"></i></span>
+                Quest Board
+            </h1>
+            <a href="{% url 'leaderboard' %}" class="btn-leaderboard">
+                <i class="fas fa-crown"></i> LEADERBOARD
+            </a>
+        </div>
 
         <!-- Add Task Form -->
         <form method="POST" action="{% url 'add_task' %}" data-action="add-task">

@@ -7,6 +7,32 @@ from django.http import JsonResponse
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
+
+
+# --- Leaderboard view ---
+@login_required(login_url='login')
+def leaderboard_view(request):
+    top_players = UserProfile.objects.select_related('user').order_by(
+        '-level', '-exp'
+    )[:10]
+
+    ranked = []
+    for rank, profile in enumerate(top_players, start=1):
+        ranked.append({
+            'rank': rank,
+            'username': profile.user.username,
+            'level': profile.level,
+            'exp': profile.exp,
+            'next_level_exp': profile.get_next_level_exp(),
+        })
+
+    return render(request, 'core/leaderboard.html', {
+        'ranked_players': ranked,
+        'top3': ranked[:3],
+        'rest': ranked[3:],
+    })
+
+
 # --- Auth views ---
 def register_view(request) : 
     if request.method == 'POST':

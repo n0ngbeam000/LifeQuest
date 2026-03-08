@@ -398,6 +398,13 @@ body {
 }
 
 /* ===== QUEST BOARD HEADER ===== */
+.quest-board-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
 .quest-header {
     display: flex;
     align-items: center;
@@ -405,7 +412,7 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--text-primary);
-    margin-bottom: 4px;
+    margin-bottom: 0;
 }
 
 .quest-header .header-icon {
@@ -418,6 +425,41 @@ body {
     justify-content: center;
     color: var(--accent-gold);
     font-size: 1.2rem;
+}
+
+.btn-leaderboard {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 20px;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s, box-shadow 0.2s;
+}
+
+.btn-leaderboard i {
+    color: var(--accent-gold);
+    font-size: 0.9rem;
+}
+
+.btn-leaderboard:hover {
+    border-color: var(--accent-gold);
+    background: rgba(255, 193, 7, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(255, 193, 7, 0.15);
+}
+
+.btn-leaderboard:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
 /* ===== TASK INPUT FORM ===== */
