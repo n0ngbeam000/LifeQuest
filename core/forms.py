@@ -19,6 +19,9 @@ class RegisterForm(forms.ModelForm):
         
         if not re.match(email_pattern, email):
             raise forms.ValidationError('กรุณากรอก email ให้ถูกต้อง (เช่น example@gmail.com)')
+
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
         
         return email
 

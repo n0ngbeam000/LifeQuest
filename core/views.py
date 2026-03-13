@@ -1,12 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.contrib.auth import authenticate, login
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.auth import authenticate, login, get_user_model
+from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse
 from django.contrib import messages
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.urls import reverse
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
+
+User = get_user_model()
+
 
 
 # --- Leaderboard view ---
@@ -42,7 +51,7 @@ def register_view(request) :
             user.set_password(form.cleaned_data['password'])
             user.save()
             messages.success(request, 'Account created successfully! Welcome to Life Quest!')
-            login(request, user)
+            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             return redirect('dashboard')
         else:
             # แสดง error ถ้ากรมไม่ valid
@@ -52,6 +61,73 @@ def register_view(request) :
     else : 
         form = RegisterForm()
     return render(request, 'core/register.html', {'form': form})
+
+# --- Password Reset views ---
+def forgot_password(request):
+    if request.method == 'POST':
+        email = request.POST.get('email', '').strip()
+        try:
+            user = User.objects.filter(email=email).first()
+            if user is None:
+                raise User.DoesNotExist
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = default_token_generator.make_token(user)
+            reset_path = reverse('reset_password', kwargs={'uidb64': uid, 'token': token})
+            reset_url = request.build_absolute_uri(reset_path)
+            email_body = render_to_string('emails/password_reset_email.txt', {
+                'user': user,
+                'reset_url': reset_url,
+            })
+            send_mail(
+                subject='Reset your Life Quest password',
+                message=email_body,
+                from_email=None,  # uses DEFAULT_FROM_EMAIL from settings
+                recipient_list=[user.email],
+                fail_silently=False,
+            )
+        except User.DoesNotExist:
+            pass  # Intentional: prevent email enumeration
+        # Always show success to prevent email enumeration
+        messages.success(
+            request,
+            'If that email is registered, you will receive a password reset link shortly.'
+        )
+        return redirect('forgot_password')
+    return render(request, 'core/forgot_password.html')
+
+
+def reset_password(request, uidb64, token):
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+    except (User.DoesNotExist, ValueError, TypeError, OverflowError):
+        user = None
+
+    if user is None or not default_token_generator.check_token(user, token):
+        messages.error(request, 'This password reset link is invalid or has expired.')
+        return redirect('forgot_password')
+
+    if request.method == 'POST':
+        password1 = request.POST.get('password1', '')
+        password2 = request.POST.get('password2', '')
+        if password1 != password2:
+            messages.error(request, 'Passwords do not match.')
+        elif len(password1) < 8:
+            messages.error(request, 'Password must be at least 8 characters long.')
+        else:
+            user.set_password(password1)
+            user.save()
+            return redirect('reset_password_done')
+
+    return render(request, 'core/reset_password.html', {
+        'uidb64': uidb64,
+        'token': token,
+    })
+
+
+def reset_password_done(request):
+    return render(request, 'core/reset_password_done.html')
+
 
 def login_view(request):
     if request.method == 'POST':

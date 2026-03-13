@@ -34,5 +34,10 @@ urlpatterns = [
     path('uncomplete_task/<int:task_id>/', views.uncomplete_task, name='uncomplete_task'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
 
+    # Password reset
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
+    path('reset-password/done/', views.reset_password_done, name='reset_password_done'),
+
     path('accounts/', include('allauth.urls')),
 ]
