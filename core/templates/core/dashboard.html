@@ -233,6 +233,28 @@
         </div>
     </main>
 
+    <!-- ========== DELETE CONFIRMATION MODAL ========== -->
+    <div class="delete-modal-overlay" id="delete-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="delete-modal-box">
+            <div class="modal-icon-wrap">
+                <i class="fas fa-skull-crossbones"></i>
+            </div>
+            <h2 class="modal-title" id="modal-title">⚠️ Abandon Quest?</h2>
+            <p class="modal-body">
+                This quest will be permanently removed from your log.<br>
+                <strong>This action cannot be undone.</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" id="modal-cancel-btn" type="button">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </button>
+                <button class="btn-modal-confirm" id="modal-confirm-btn" type="button">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- URL templates for AJAX (resolved server-side, '0' is a placeholder replaced in JS) -->
     <script>
     window.QUEST_URLS = {

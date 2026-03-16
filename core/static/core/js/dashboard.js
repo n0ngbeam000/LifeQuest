@@ -3,6 +3,11 @@
    Toast Notifications & Interactivity
    ======================================== */
 
+/* ========== DELETE MODAL STATE ========== */
+// Stores the quest element and ID awaiting confirmation.
+let currentQuestElement = null;
+let currentQuestId = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('✓ Dashboard initialized');
 
@@ -109,6 +114,21 @@ function initializeEventListeners() {
             }
         });
     }
+
+    // --- Delete Confirmation Modal Buttons ---
+    const cancelBtn = document.getElementById('modal-cancel-btn');
+    const confirmBtn = document.getElementById('modal-confirm-btn');
+    const overlay = document.getElementById('delete-modal-overlay');
+
+    if (cancelBtn) cancelBtn.addEventListener('click', hideDeleteModal);
+    if (confirmBtn) confirmBtn.addEventListener('click', executeDeleteQuest);
+
+    // Clicking the dark backdrop also dismisses the modal
+    if (overlay) {
+        overlay.addEventListener('click', function (e) {
+            if (e.target === overlay) hideDeleteModal();
+        });
+    }
 }
 
 /* ========== BOOTSTRAP TOOLTIPS ========== */
@@ -150,189 +170,220 @@ function handleQuestAction(e) {
 
 function handleAddTask(e) {
     e.preventDefault();
-    const form       = e.currentTarget;
-    const btn        = form.querySelector('button[type="submit"]');
+    const form = e.currentTarget;
+    const btn = form.querySelector('button[type="submit"]');
     const titleInput = form.querySelector('input[name="title"]');
     const diffSelect = form.querySelector('select[name="difficulty"]');
 
     btn.innerHTML = '⏳ Adding...';
-    btn.disabled  = true;
+    btn.disabled = true;
 
     fetch(form.action, {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
         body: new FormData(form),
     })
-    .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
-    .then(data => {
-        if (data.status === 'success') {
-            titleInput.value = '';
-            diffSelect.value = '10';
+        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(data => {
+            if (data.status === 'success') {
+                titleInput.value = '';
+                diffSelect.value = '10';
 
-            const activeList = document.getElementById('active-quest-list');
-            if (activeList) {
-                const emptyState = document.getElementById('empty-state');
-                if (emptyState) emptyState.remove();
-                activeList.insertAdjacentHTML('beforeend', buildActiveQuestHTML(data.quest));
+                const activeList = document.getElementById('active-quest-list');
+                if (activeList) {
+                    const emptyState = document.getElementById('empty-state');
+                    if (emptyState) emptyState.remove();
+                    activeList.insertAdjacentHTML('beforeend', buildActiveQuestHTML(data.quest));
+                }
+                updateActiveCount(1);
+                showToast('New Quest Added! ⚔️', 'success', 3000);
+            } else {
+                showToast(data.message || 'Failed to add quest.', 'error', 4000);
             }
-            updateActiveCount(1);
-            showToast('New Quest Added! ⚔️', 'success', 3000);
-        } else {
-            showToast(data.message || 'Failed to add quest.', 'error', 4000);
-        }
-    })
-    .catch(err => {
-        console.error('Add task error:', err);
-        showToast('Something went wrong. Please try again.', 'error', 4000);
-    })
-    .finally(() => {
-        btn.innerHTML = '<i class="fas fa-plus"></i> ADD';
-        btn.disabled  = false;
-        titleInput.focus();
-    });
+        })
+        .catch(err => {
+            console.error('Add task error:', err);
+            showToast('Something went wrong. Please try again.', 'error', 4000);
+        })
+        .finally(() => {
+            btn.innerHTML = '<i class="fas fa-plus"></i> ADD';
+            btn.disabled = false;
+            titleInput.focus();
+        });
 }
 
 /* ========== COMPLETE QUEST (AJAX) ========== */
 
 function completeQuest(btn) {
-    const taskId    = btn.dataset.taskId;
+    const taskId = btn.dataset.taskId;
     const questItem = document.getElementById(`quest-${taskId}`);
 
     btn.style.pointerEvents = 'none';
-    btn.style.opacity       = '0.4';
+    btn.style.opacity = '0.4';
 
     fetch(getQuestUrl('complete', taskId), {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-    .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
-    .then(data => {
-        if (data.status === 'success') {
-            if (questItem) {
-                questItem.classList.add('quest-completing');
-                setTimeout(() => {
-                    questItem.remove();
-                    updateActiveCount(-1);
-                    checkEmptyState();
+        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(data => {
+            if (data.status === 'success') {
+                if (questItem) {
+                    questItem.classList.add('quest-completing');
+                    setTimeout(() => {
+                        questItem.remove();
+                        updateActiveCount(-1);
+                        checkEmptyState();
 
-                    // Add the completed card to the completed list
-                    const completedList    = document.getElementById('completed-quest-list');
-                    const completedSection = document.getElementById('completed-section');
-                    if (completedList) {
-                        completedList.insertAdjacentHTML('afterbegin', buildCompletedQuestHTML(data.quest));
-                        // Keep only the 3 most recent visible cards to match server behaviour
-                        const cards = completedList.querySelectorAll('.quest-item.completed');
-                        if (cards.length > 3) cards[cards.length - 1].remove();
-                    }
-                    if (completedSection) completedSection.style.display = '';
-                    updateCompletedCount(1);
-                }, 500);
+                        // Add the completed card to the completed list
+                        const completedList = document.getElementById('completed-quest-list');
+                        const completedSection = document.getElementById('completed-section');
+                        if (completedList) {
+                            completedList.insertAdjacentHTML('afterbegin', buildCompletedQuestHTML(data.quest));
+                            // Keep only the 3 most recent visible cards to match server behaviour
+                            const cards = completedList.querySelectorAll('.quest-item.completed');
+                            if (cards.length > 3) cards[cards.length - 1].remove();
+                        }
+                        if (completedSection) completedSection.style.display = '';
+                        updateCompletedCount(1);
+                    }, 500);
+                }
+                updatePlayerStats(data);
+                const msg = data.leveled_up
+                    ? `LEVEL UP! You reached Level ${data.new_level}! ★`
+                    : `Quest Complete! +${data.xp_gained} XP`;
+                showToast(msg, 'success', 4000);
             }
-            updatePlayerStats(data);
-            const msg = data.leveled_up
-                ? `LEVEL UP! You reached Level ${data.new_level}! ★`
-                : `Quest Complete! +${data.xp_gained} XP`;
-            showToast(msg, 'success', 4000);
-        }
-    })
-    .catch(err => {
-        console.error('Complete quest error:', err);
-        btn.style.pointerEvents = '';
-        btn.style.opacity       = '';
-        showToast('Something went wrong. Please try again.', 'error', 4000);
-    });
+        })
+        .catch(err => {
+            console.error('Complete quest error:', err);
+            btn.style.pointerEvents = '';
+            btn.style.opacity = '';
+            showToast('Something went wrong. Please try again.', 'error', 4000);
+        });
 }
 
-/* ========== DELETE QUEST (AJAX) ========== */
+/* ========== DELETE QUEST (MODAL FLOW) ========== */
 
+/**
+ * Step 1 – intercept the trash-icon click.
+ * Store state and open the confirmation modal instead of using window.confirm().
+ */
 function deleteQuest(btn) {
-    if (!confirm('Are you sure you want to delete this quest?')) return;
+    currentQuestId = btn.dataset.taskId;
+    currentQuestElement = document.getElementById(`quest-${currentQuestId}`);
+    showDeleteModal();
+}
 
-    const taskId    = btn.dataset.taskId;
-    const questItem = document.getElementById(`quest-${taskId}`);
+/** Show the custom delete confirmation modal. */
+function showDeleteModal() {
+    const overlay = document.getElementById('delete-modal-overlay');
+    if (overlay) overlay.classList.add('active');
+}
+
+/** Hide the modal and clear pending-delete state. */
+function hideDeleteModal() {
+    const overlay = document.getElementById('delete-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+    currentQuestElement = null;
+    currentQuestId = null;
+}
+
+/**
+ * Step 2 – called when the modal "Delete" button is clicked.
+ * Hides the modal then fires the fetch() DELETE request.
+ */
+function executeDeleteQuest() {
+    // Capture and clear state before async work
+    const taskId = currentQuestId;
+    const questItem = currentQuestElement;
+    hideDeleteModal();
+
+    if (!taskId) return;
+
     const wasActive = questItem && questItem.classList.contains('active');
 
     fetch(getQuestUrl('delete', taskId), {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-    .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
-    .then(data => {
-        if (data.status === 'success') {
-            if (questItem) {
-                questItem.classList.add('quest-completing');
-                setTimeout(() => {
-                    questItem.remove();
-                    if (wasActive) {
-                        updateActiveCount(-1);
-                        checkEmptyState();
-                    } else {
-                        updateCompletedCount(-1);
-                        checkCompletedSection();
-                    }
-                }, 500);
+        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(data => {
+            if (data.status === 'success') {
+                if (questItem) {
+                    questItem.classList.add('quest-completing');
+                    setTimeout(() => {
+                        questItem.remove();
+                        if (wasActive) {
+                            updateActiveCount(-1);
+                            checkEmptyState();
+                        } else {
+                            updateCompletedCount(-1);
+                            checkCompletedSection();
+                        }
+                    }, 500);
+                }
+                showToast('Quest deleted.', 'info', 3000);
             }
-            showToast('Quest deleted.', 'info', 3000);
-        }
-    })
-    .catch(err => {
-        console.error('Delete quest error:', err);
-        showToast('Something went wrong. Please try again.', 'error', 4000);
-    });
+        })
+        .catch(err => {
+            console.error('Delete quest error:', err);
+            showToast('Something went wrong. Please try again.', 'error', 4000);
+        });
 }
 
 /* ========== UNDO QUEST (AJAX) ========== */
 
 function undoQuest(btn) {
-    const taskId    = btn.dataset.taskId;
+    const taskId = btn.dataset.taskId;
     const questItem = document.getElementById(`quest-${taskId}`);
 
     btn.style.pointerEvents = 'none';
-    btn.style.opacity       = '0.4';
+    btn.style.opacity = '0.4';
 
     fetch(getQuestUrl('undo', taskId), {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-    .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
-    .then(data => {
-        if (data.status === 'success') {
-            if (questItem) {
-                questItem.remove();
-                updateCompletedCount(-1);
-                checkCompletedSection();
-            }
-
-            // If the server found a replacement task to fill the 3rd slot, append it
-            if (data.next_completed) {
-                const completedList    = document.getElementById('completed-quest-list');
-                const completedSection = document.getElementById('completed-section');
-                if (completedList) {
-                    // Only add if not already in the DOM (e.g. rapid clicks)
-                    if (!document.getElementById(`quest-${data.next_completed.id}`)) {
-                        completedList.insertAdjacentHTML('beforeend', buildCompletedQuestHTML(data.next_completed));
-                    }
+        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(data => {
+            if (data.status === 'success') {
+                if (questItem) {
+                    questItem.remove();
+                    updateCompletedCount(-1);
+                    checkCompletedSection();
                 }
-                if (completedSection) completedSection.style.display = '';
-            }
 
-            const activeList = document.getElementById('active-quest-list');
-            if (activeList) {
-                const emptyState = document.getElementById('empty-state');
-                if (emptyState) emptyState.remove();
-                activeList.insertAdjacentHTML('afterbegin', buildActiveQuestHTML(data.quest));
+                // If the server found a replacement task to fill the 3rd slot, append it
+                if (data.next_completed) {
+                    const completedList = document.getElementById('completed-quest-list');
+                    const completedSection = document.getElementById('completed-section');
+                    if (completedList) {
+                        // Only add if not already in the DOM (e.g. rapid clicks)
+                        if (!document.getElementById(`quest-${data.next_completed.id}`)) {
+                            completedList.insertAdjacentHTML('beforeend', buildCompletedQuestHTML(data.next_completed));
+                        }
+                    }
+                    if (completedSection) completedSection.style.display = '';
+                }
+
+                const activeList = document.getElementById('active-quest-list');
+                if (activeList) {
+                    const emptyState = document.getElementById('empty-state');
+                    if (emptyState) emptyState.remove();
+                    activeList.insertAdjacentHTML('afterbegin', buildActiveQuestHTML(data.quest));
+                }
+                updateActiveCount(1);
+                updatePlayerStats(data);
+                showToast(`Quest reverted! -${data.xp_lost} XP`, 'info', 3000);
             }
-            updateActiveCount(1);
-            updatePlayerStats(data);
-            showToast(`Quest reverted! -${data.xp_lost} XP`, 'info', 3000);
-        }
-    })
-    .catch(err => {
-        console.error('Undo quest error:', err);
-        btn.style.pointerEvents = '';
-        btn.style.opacity       = '';
-        showToast('Something went wrong. Please try again.', 'error', 4000);
-    });
+        })
+        .catch(err => {
+            console.error('Undo quest error:', err);
+            btn.style.pointerEvents = '';
+            btn.style.opacity = '';
+            showToast('Something went wrong. Please try again.', 'error', 4000);
+        });
 }
 
 /* ========== DOM HELPERS ========== */
@@ -446,7 +497,7 @@ function checkEmptyState() {
 
 /** Hide the completed section when its list becomes empty. */
 function checkCompletedSection() {
-    const list    = document.getElementById('completed-quest-list');
+    const list = document.getElementById('completed-quest-list');
     const section = document.getElementById('completed-section');
     if (list && section && list.children.length === 0) {
         section.style.display = 'none';
@@ -532,12 +583,12 @@ function getCsrfToken() {
  */
 function updatePlayerStats(data) {
     const levelBadge = document.getElementById('level-badge');
-    const expValues  = document.getElementById('exp-values');
+    const expValues = document.getElementById('exp-values');
     const expBarFill = document.getElementById('exp-bar-fill');
-    const expNext    = document.getElementById('exp-next');
+    const expNext = document.getElementById('exp-next');
 
     if (levelBadge) levelBadge.textContent = `Lv. ${data.new_level}`;
-    if (expValues)  expValues.textContent  = `${data.new_exp}/${data.next_level_exp}`;
+    if (expValues) expValues.textContent = `${data.new_exp}/${data.next_level_exp}`;
     if (expBarFill) expBarFill.style.width = `${data.exp_percentage}%`;
     if (expNext) {
         const remaining = data.next_level_exp - data.new_exp;
@@ -555,9 +606,9 @@ document.addEventListener('keydown', function (e) {
         if (taskInput) taskInput.focus();
     }
 
-    // Escape: Close any dropdowns or modals
+    // Escape: Close the delete confirmation modal (if open)
     if (e.key === 'Escape') {
-        console.log('Escape pressed');
+        hideDeleteModal();
     }
 });
 
