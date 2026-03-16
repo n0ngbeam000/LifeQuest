@@ -1,0 +1,128 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hall of Fame — LifeQuest</title>
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Leaderboard Stylesheet -->
+    <link rel="stylesheet" href="{% static 'core/css/leaderboard.css' %}">
+</head>
+<body>
+
+    <!-- Floating Particles Background -->
+    <div id="particles-container"></div>
+
+    <!-- Back Button -->
+    <a href="{% url 'dashboard' %}" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+
+    <!-- Gradient Header -->
+    <div class="header-container">
+        <div class="sparkle sparkle-1"><i class="fas fa-star"></i></div>
+        <div class="sparkle sparkle-2"><i class="fas fa-star"></i></div>
+        <div class="sparkle sparkle-3"><i class="fas fa-star"></i></div>
+        <h1 class="page-title">✨ HALL OF FAME ✨</h1>
+        <p class="page-subtitle">Top adventurers of LifeQuest</p>
+    </div>
+
+    <!-- ========== TOP 3 PODIUM ========== -->
+    <div class="podium">
+        {% if top3|length >= 2 %}
+        <!-- Rank 2 — Silver (Left) -->
+        <div class="podium-item silver" style="--delay: 0.15s">
+            <div class="podium-card silver">
+                <div class="medal-badge">🥈</div>
+                <span class="rank-badge">#2</span>
+                <div class="avatar-ring silver-ring">
+                    <img class="podium-avatar"
+                         src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ top3.1.username }}"
+                         alt="{{ top3.1.username }}">
+                </div>
+                <h3 class="podium-name">{{ top3.1.username }}</h3>
+                <span class="podium-level">Lv. {{ top3.1.level }}</span>
+                <span class="podium-exp">{{ top3.1.exp }} / {{ top3.1.next_level_exp }} EXP</span>
+            </div>
+            <div class="podium-stand silver-stand">
+                <span class="stand-rank">#2</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if top3|length >= 1 %}
+        <!-- Rank 1 — Gold (Center, tallest) -->
+        <div class="podium-item gold" style="--delay: 0s">
+            <div class="podium-card gold">
+                <div class="crown"><i class="fas fa-crown"></i></div>
+                <div class="medal-badge">🥇</div>
+                <span class="rank-badge"><i class="fas fa-crown"></i></span>
+                <div class="avatar-ring gold-ring">
+                    <img class="podium-avatar"
+                         src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ top3.0.username }}"
+                         alt="{{ top3.0.username }}">
+                </div>
+                <h3 class="podium-name">{{ top3.0.username }}</h3>
+                <span class="podium-level">Lv. {{ top3.0.level }}</span>
+                <span class="podium-exp">{{ top3.0.exp }} / {{ top3.0.next_level_exp }} EXP</span>
+            </div>
+            <div class="podium-stand gold-stand">
+                <span class="stand-rank">#1</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if top3|length >= 3 %}
+        <!-- Rank 3 — Bronze (Right) -->
+        <div class="podium-item bronze" style="--delay: 0.3s">
+            <div class="podium-card bronze">
+                <div class="medal-badge">🥉</div>
+                <span class="rank-badge">#3</span>
+                <div class="avatar-ring bronze-ring">
+                    <img class="podium-avatar"
+                         src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ top3.2.username }}"
+                         alt="{{ top3.2.username }}">
+                </div>
+                <h3 class="podium-name">{{ top3.2.username }}</h3>
+                <span class="podium-level">Lv. {{ top3.2.level }}</span>
+                <span class="podium-exp">{{ top3.2.exp }} / {{ top3.2.next_level_exp }} EXP</span>
+            </div>
+            <div class="podium-stand bronze-stand">
+                <span class="stand-rank">#3</span>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ========== RANK 4+ LIST ========== -->
+    {% if rest %}
+    <div class="rest-list">
+        {% for player in rest %}
+        <div class="rest-row" style="--i: {{ forloop.counter }}">
+            <span class="rest-rank">#{{ player.rank }}</span>
+            <img class="rest-avatar"
+                 src="https://api.dicebear.com/7.x/avataaars/svg?seed={{ player.username }}"
+                 alt="{{ player.username }}">
+            <span class="rest-name">{{ player.username }}</span>
+            <span class="rest-level">Lv. {{ player.level }}</span>
+            <span class="rest-exp">{{ player.exp }} / {{ player.next_level_exp }} EXP</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if not ranked_players %}
+    <div class="empty-leaderboard">
+        <i class="fas fa-ghost"></i>
+        <p>No adventurers yet. Be the first!</p>
+    </div>
+    {% endif %}
+
+    <!-- Leaderboard JS (particles) -->
+    <script src="{% static 'core/js/leaderboard.js' %}"></script>
+</body>
+</html>

@@ -30,7 +30,7 @@
                      alt="Avatar"
                      class="profile-avatar"
                      title="{{ user.username }}">
-                <div class="level-badge">Lv. {{ user.profile.level }}</div>
+                <div class="level-badge" id="level-badge">Lv. {{ user.profile.level }}</div>
             </div>
             <h2 class="username">{{ user.username }}</h2>
         </div>
@@ -39,12 +39,12 @@
         <div class="exp-section">
             <div class="exp-label">
                 <span><span class="star-icon">★</span> EXP</span>
-                <span class="exp-values">{{ user.profile.exp }}/{{ next_level_exp }}</span>
+                <span class="exp-values" id="exp-values">{{ user.profile.exp }}/{{ next_level_exp }}</span>
             </div>
             <div class="exp-bar-container">
-                <div class="exp-bar-fill" style="width: {{ xp_percentage|default:0 }}%;"></div>
+                <div class="exp-bar-fill" id="exp-bar-fill" style="width: {{ xp_percentage|default:0 }}%;"></div>
             </div>
-            <div class="exp-next">{{ exp_remaining }} EXP for next level</div>
+            <div class="exp-next" id="exp-next">{{ exp_remaining }} EXP for next level</div>
         </div>
 
         <!-- Navigation Menu -->
@@ -54,7 +54,7 @@
                     <i class="fas fa-circle-dot"></i>
                 </div>
                 <span class="nav-item-label">Active Quests</span>
-                <span class="nav-count">{{ active_tasks.count }}</span>
+                <span class="nav-count" id="nav-active-count">{{ active_tasks.count }}</span>
             </div>
 
             <div class="nav-item" title="Completed quests">
@@ -62,7 +62,7 @@
                     <i class="fas fa-trophy"></i>
                 </div>
                 <span class="nav-item-label">Completed</span>
-                <span class="nav-count">{{ completed_count }}</span>
+                <span class="nav-count" id="nav-completed-count">{{ completed_count }}</span>
             </div>
         </nav>
 
@@ -86,10 +86,15 @@
         {% endif %}
 
         <!-- Quest Board Header -->
-        <h1 class="quest-header">
-            <span class="header-icon"><i class="fas fa-trophy"></i></span>
-            Quest Board
-        </h1>
+        <div class="quest-board-header">
+            <h1 class="quest-header">
+                <span class="header-icon"><i class="fas fa-trophy"></i></span>
+                Quest Board
+            </h1>
+            <a href="{% url 'leaderboard' %}" class="btn-leaderboard">
+                <i class="fas fa-crown"></i> LEADERBOARD
+            </a>
+        </div>
 
         <!-- Add Task Form -->
         <form method="POST" action="{% url 'add_task' %}" data-action="add-task">
@@ -119,74 +124,75 @@
         <div class="quest-board">
 
             <!-- Active Quests -->
-            {% if active_tasks %}
-                <div class="quest-list">
-                    {% for task in active_tasks %}
-                    <div class="quest-item active">
+            <div id="active-quest-list" class="quest-list">
+                {% for task in active_tasks %}
+                <div class="quest-item active" id="quest-{{ task.id }}">
 
-                        <!-- Checkbox -->
-                        <a href="{% url 'complete_task' task.id %}"
-                           class="quest-checkbox"
-                           data-action="complete"
-                           data-task-title="{{ task.title }}"
-                           title="Complete quest">
-                            <i class="fas fa-check"></i>
-                        </a>
+                    <!-- Checkbox -->
+                    <a href="{% url 'complete_task' task.id %}"
+                       class="quest-checkbox"
+                       data-action="complete"
+                       data-task-id="{{ task.id }}"
+                       data-task-title="{{ task.title }}"
+                       title="Complete quest">
+                        <i class="fas fa-check"></i>
+                    </a>
 
-                        <!-- Quest Info -->
-                        <div class="quest-info">
-                            <span class="quest-title">{{ task.title }}</span>
-                            <div class="quest-meta">
-                                {% if task.difficulty == 50 %}
-                                    <span class="quest-badge hard">HARD</span>
-                                {% elif task.difficulty == 30 %}
-                                    <span class="quest-badge medium">MEDIUM</span>
-                                {% else %}
-                                    <span class="quest-badge easy">EASY</span>
-                                {% endif %}
-                                <span class="quest-timestamp">
-                                    <i class="far fa-clock"></i>
-                                    {{ task.created_at|date:"M d, h:i A" }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="quest-actions">
-                            <span class="quest-xp">+{{ task.difficulty }} XP</span>
-                            <a href="{% url 'delete_task' task.id %}"
-                               class="btn-delete"
-                               data-action="delete"
-                               title="Delete quest">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                    <!-- Quest Info -->
+                    <div class="quest-info">
+                        <span class="quest-title">{{ task.title }}</span>
+                        <div class="quest-meta">
+                            {% if task.difficulty == 50 %}
+                                <span class="quest-badge hard">HARD</span>
+                            {% elif task.difficulty == 30 %}
+                                <span class="quest-badge medium">MEDIUM</span>
+                            {% else %}
+                                <span class="quest-badge easy">EASY</span>
+                            {% endif %}
+                            <span class="quest-timestamp">
+                                <i class="far fa-clock"></i>
+                                {{ task.created_at|date:"M d, h:i A" }}
+                            </span>
                         </div>
                     </div>
-                    {% endfor %}
+
+                    <!-- Actions -->
+                    <div class="quest-actions">
+                        <span class="quest-xp">+{{ task.difficulty }} XP</span>
+                        <a href="{% url 'delete_task' task.id %}"
+                           class="btn-delete"
+                           data-action="delete"
+                           data-task-id="{{ task.id }}"
+                           title="Delete quest">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </div>
                 </div>
-            {% else %}
-                <div class="empty-state">
+                {% empty %}
+                <div id="empty-state" class="empty-state">
                     <i class="fas fa-scroll"></i>
                     <p>No active quests. Add a new mission above!</p>
                 </div>
-            {% endif %}
+                {% endfor %}
+            </div>
 
             <!-- Completed Quests -->
-            {% if completed_tasks %}
+            <div id="completed-section" {% if not completed_tasks %}style="display:none;"{% endif %}>
                 <div class="completed-section-title">
                     <span class="check-icon"><i class="fas fa-check-circle"></i></span>
-                    Completed ({{ completed_count }})
+                    Completed (<span id="completed-count">{{ completed_count }}</span>)
                 </div>
 
-                <div class="completed-list">
+                <div id="completed-quest-list" class="completed-list">
                     {% for task in completed_tasks %}
-                    <div class="quest-item completed">
+                    <div class="quest-item completed" id="quest-{{ task.id }}">
 
                         <!-- Checkmark Icon (click to undo) -->
                         <a href="{% url 'uncomplete_task' task.id %}"
                            class="quest-checkbox completed-check"
-                           title="Undo task"
-                           style="cursor: pointer; text-decoration: none;">
+                           data-action="undo"
+                           data-task-id="{{ task.id }}"
+                           title="Undo task">
                             <i class="fas fa-check"></i>
                         </a>
 
@@ -214,6 +220,7 @@
                             <a href="{% url 'delete_task' task.id %}"
                                class="btn-delete"
                                data-action="delete"
+                               data-task-id="{{ task.id }}"
                                title="Delete quest">
                                 <i class="fas fa-trash"></i>
                             </a>
@@ -221,10 +228,41 @@
                     </div>
                     {% endfor %}
                 </div>
-            {% endif %}
+            </div>
 
         </div>
     </main>
+
+    <!-- ========== DELETE CONFIRMATION MODAL ========== -->
+    <div class="delete-modal-overlay" id="delete-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="delete-modal-box">
+            <div class="modal-icon-wrap">
+                <i class="fas fa-skull-crossbones"></i>
+            </div>
+            <h2 class="modal-title" id="modal-title">⚠️ Abandon Quest?</h2>
+            <p class="modal-body">
+                This quest will be permanently removed from your log.<br>
+                <strong>This action cannot be undone.</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="btn-modal-cancel" id="modal-cancel-btn" type="button">
+                    <i class="fas fa-arrow-left"></i> Cancel
+                </button>
+                <button class="btn-modal-confirm" id="modal-confirm-btn" type="button">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- URL templates for AJAX (resolved server-side, '0' is a placeholder replaced in JS) -->
+    <script>
+    window.QUEST_URLS = {
+        complete: "{% url 'complete_task' 0 %}",
+        delete:   "{% url 'delete_task' 0 %}",
+        undo:     "{% url 'uncomplete_task' 0 %}",
+    };
+    </script>
 
     <!-- Dashboard JavaScript -->
     <script src="{% static 'core/js/dashboard.js' %}"></script>

@@ -18,7 +18,10 @@ class RegisterForm(forms.ModelForm):
         email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
         
         if not re.match(email_pattern, email):
-            raise forms.ValidationError('กรุณากรอก email ให้ถูกต้อง (เช่น example@gmail.com)')
+            raise forms.ValidationError('Please enter a valid email address (e.g., example@gmail.com).')
+
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError('This email is already registered.')
         
         return email
 

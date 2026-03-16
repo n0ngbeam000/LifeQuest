@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Your Email — LifeQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --accent: #eab308;
+      --accent-glow: rgba(234, 179, 8, 0.25);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --success: #4ade80;
+      --error: #f87171;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    .icon-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .icon-wrap i {
+      font-size: 2.75rem;
+      color: var(--accent);
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+    }
+
+    .auth-title {
+      font-family: 'VT323', monospace;
+      font-size: 2.4rem;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent-glow);
+      margin-bottom: 0.25rem;
+    }
+
+    .auth-subtitle {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+      line-height: 1.6;
+    }
+
+    .info-box {
+      background: rgba(234, 179, 8, 0.07);
+      border: 1px solid rgba(234, 179, 8, 0.25);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.65;
+      margin-bottom: 1.75rem;
+    }
+
+    .info-box strong {
+      color: var(--accent);
+    }
+
+    .btn-primary {
+      display: inline-block;
+      width: 100%;
+      padding: 0.85rem;
+      background: var(--accent);
+      color: #0f172a;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="icon-wrap">
+        <i class="fa-solid fa-envelope"></i>
+      </div>
+
+      <h1 class="auth-title">VERIFY EMAIL</h1>
+      <p class="auth-subtitle">One more step before your adventure begins</p>
+
+      <div class="info-box">
+        We've sent a verification link to your email address.<br><br>
+        Please click the link inside to <strong><br>verify your account</strong> and begin your quest.
+      </div>
+
+      <a href="{% url 'login' %}" class="btn-primary">
+        <i class="fa-solid fa-right-to-bracket" style="margin-right:8px;"></i>BACK TO LOGIN
+      </a>
+
+      <a href="{% url 'login' %}" class="back-link">
+        ← Return to the guild entrance
+      </a>
+
+    </div>
+  </div>
+</body>
+</html>

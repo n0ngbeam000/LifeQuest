@@ -1,0 +1,9 @@
+Welcome to Life Quest, {{ user.username }}!
+
+To activate your account and start your adventure, please click the link below to verify your email address:
+
+{{ activate_url }}
+
+If you did not sign up for this account, you can safely ignore this email.
+
+— The Life Quest Guild
