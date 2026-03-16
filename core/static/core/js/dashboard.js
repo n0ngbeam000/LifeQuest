@@ -19,6 +19,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize Bootstrap Tooltips
     initializeTooltips();
+
+    // Initialize custom difficulty dropdown
+    initDiffDropdown();
+
+    // Initialize mobile hamburger menu
+    initMobileMenu();
 });
 
 /* ========== TOAST NOTIFICATION SYSTEM ========== */
@@ -173,7 +179,7 @@ function handleAddTask(e) {
     const form = e.currentTarget;
     const btn = form.querySelector('button[type="submit"]');
     const titleInput = form.querySelector('input[name="title"]');
-    const diffSelect = form.querySelector('select[name="difficulty"]');
+    const diffSelect = form.querySelector('#diff-value');
 
     btn.innerHTML = '⏳ Adding...';
     btn.disabled = true;
@@ -188,6 +194,18 @@ function handleAddTask(e) {
             if (data.status === 'success') {
                 titleInput.value = '';
                 diffSelect.value = '10';
+                // Reset trigger button to Easy
+                const trigger = document.getElementById('diff-trigger');
+                if (trigger) {
+                    trigger.querySelector('.diff-trigger-icon').textContent = '⚡';
+                    trigger.querySelector('.diff-trigger-label').textContent = 'Easy';
+                    trigger.querySelector('.diff-trigger-xp').textContent = '+10 XP';
+                    trigger.className = 'diff-trigger active-easy';
+                }
+                // Reset selected state in panel
+                document.querySelectorAll('.diff-item').forEach(i => i.classList.remove('selected'));
+                const firstItem = document.querySelector('.diff-item[data-value="10"]');
+                if (firstItem) firstItem.classList.add('selected');
 
                 const activeList = document.getElementById('active-quest-list');
                 if (activeList) {
@@ -402,7 +420,7 @@ function getQuestUrl(action, taskId) {
  */
 function buildActiveQuestHTML(quest) {
     const { id, title, difficulty, created_at } = quest;
-    const diffMap = { 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
+    const diffMap = { 100: ['epic', 'EPIC'], 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
     const [cls, label] = diffMap[difficulty] || ['easy', 'EASY'];
 
     return `
@@ -442,7 +460,7 @@ function buildActiveQuestHTML(quest) {
  */
 function buildCompletedQuestHTML(quest) {
     const { id, title, difficulty, completed_at } = quest;
-    const diffMap = { 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
+    const diffMap = { 100: ['epic', 'EPIC'], 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
     const [cls, label] = diffMap[difficulty] || ['easy', 'EASY'];
 
     return `
@@ -583,17 +601,23 @@ function getCsrfToken() {
  */
 function updatePlayerStats(data) {
     const levelBadge = document.getElementById('level-badge');
-    const expValues = document.getElementById('exp-values');
-    const expBarFill = document.getElementById('exp-bar-fill');
-    const expNext = document.getElementById('exp-next');
+    const expNext    = document.getElementById('exp-next');
 
     if (levelBadge) levelBadge.textContent = `Lv. ${data.new_level}`;
-    if (expValues) expValues.textContent = `${data.new_exp}/${data.next_level_exp}`;
-    if (expBarFill) expBarFill.style.width = `${data.exp_percentage}%`;
     if (expNext) {
         const remaining = data.next_level_exp - data.new_exp;
         expNext.textContent = `${remaining} EXP for next level`;
     }
+
+    // Update every EXP text element (sidebar + mobile menu share the same class)
+    document.querySelectorAll('.exp-values').forEach(el => {
+        el.textContent = `${data.new_exp}/${data.next_level_exp}`;
+    });
+
+    // Update every EXP bar fill (sidebar + mobile menu share the same class)
+    document.querySelectorAll('.exp-bar-fill').forEach(el => {
+        el.style.width = `${data.exp_percentage}%`;
+    });
 }
 
 /* ========== KEYBOARD SHORTCUTS ========== */
@@ -632,3 +656,101 @@ function observeScrollAnimations() {
 }
 
 console.log('✓ Dashboard JavaScript loaded successfully');
+
+/* ========== CUSTOM DIFFICULTY DROPDOWN ========== */
+
+function initDiffDropdown() {
+    const trigger  = document.getElementById('diff-trigger');
+    const panel    = document.getElementById('diff-panel');
+    const hiddenInput = document.getElementById('diff-value');
+    if (!trigger || !panel || !hiddenInput) return;
+
+    // Mark the default selected item (Easy)
+    const defaultItem = panel.querySelector('.diff-item[data-value="10"]');
+    if (defaultItem) {
+        defaultItem.classList.add('selected');
+        trigger.classList.add('active-easy');
+    }
+
+    // Toggle open / close
+    trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        const isOpen = panel.classList.toggle('open');
+        trigger.classList.toggle('open', isOpen);
+        trigger.setAttribute('aria-expanded', isOpen);
+    });
+
+    // Select an item
+    panel.addEventListener('click', function (e) {
+        const item = e.target.closest('.diff-item');
+        if (!item) return;
+
+        const value = item.dataset.value;
+        const icon  = item.dataset.icon;
+        const label = item.dataset.label;
+        const xp    = item.dataset.xp;
+        const color = item.dataset.color;
+
+        // Update hidden input
+        hiddenInput.value = value;
+
+        // Update trigger appearance
+        trigger.querySelector('.diff-trigger-icon').textContent  = icon;
+        trigger.querySelector('.diff-trigger-label').textContent = label;
+        trigger.querySelector('.diff-trigger-xp').textContent   = xp;
+        trigger.className = `diff-trigger active-${color}`;
+
+        // Mark selected row
+        panel.querySelectorAll('.diff-item').forEach(i => i.classList.remove('selected'));
+        item.classList.add('selected');
+
+        // Close panel
+        panel.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+
+    // Click outside closes panel
+    document.addEventListener('click', function () {
+        panel.classList.remove('open');
+        trigger.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+    });
+}
+
+/* ========== MOBILE MENU ========== */
+
+function initMobileMenu() {
+    const hamburger = document.getElementById('mobile-hamburger');
+    const menu      = document.getElementById('mobile-menu');
+    const overlay   = document.getElementById('mobile-menu-overlay');
+    const closeBtn  = document.getElementById('mobile-menu-close');
+    const mainContent = document.querySelector('.main-content');
+
+    if (!hamburger || !menu || !overlay) return;
+
+    function openMenu() {
+        menu.classList.add('open');
+        overlay.classList.add('open');
+        // Prevent the main scroll area from scrolling while menu is open
+        if (mainContent) mainContent.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+        menu.classList.remove('open');
+        overlay.classList.remove('open');
+        if (mainContent) mainContent.style.overflow = '';
+    }
+
+    hamburger.addEventListener('click', openMenu);
+
+    // Overlay click = "click outside"
+    overlay.addEventListener('click', closeMenu);
+
+    // Explicit close button inside the panel
+    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+
+    // Escape key closes the menu (in addition to the delete-modal handler)
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeMenu();
+    });
+}

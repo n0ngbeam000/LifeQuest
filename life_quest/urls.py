@@ -33,6 +33,7 @@ urlpatterns = [
     path('delete/<int:task_id>/', views.delete_task, name='delete_task'),
     path('uncomplete_task/<int:task_id>/', views.uncomplete_task, name='uncomplete_task'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
+    path('completed/', views.completed_quests_view, name='completed_quests'),
 
     # Password reset
     path('forgot-password/', views.forgot_password, name='forgot_password'),

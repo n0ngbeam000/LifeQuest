@@ -649,53 +649,273 @@ body {
 }
 
 /* ========== RESPONSIVE ========== */
-@media (max-width: 700px) {
+
+/* ---- Notebook / tablet landscape (769px – 900px) ---- */
+@media (max-width: 900px) and (min-width: 769px) {
     .podium {
-        flex-direction: column;
-        align-items: center;
-        gap: 18px;
+        max-width: 660px;
+        gap: 14px;
     }
 
-    .podium-item.gold,
-    .podium-item.silver,
-    .podium-item.bronze {
-        order: unset;
+    .podium-card {
+        width: 170px;
     }
 
-    .podium-card.gold,
-    .podium-card.silver,
-    .podium-card.bronze {
-        width: 100%;
-        max-width: 280px;
+    .podium-card.gold {
+        width: 190px;
+        padding: 38px 20px 22px;
     }
 
     .podium-stand {
-        display: none;
+        width: 170px;
     }
 
-    .gold-stand,
-    .silver-stand,
+    .gold-stand {
+        width: 190px;
+        height: 120px;
+    }
+
+    .silver-stand {
+        height: 86px;
+    }
+
     .bronze-stand {
-        width: 100%;
-        max-width: 280px;
+        height: 60px;
     }
 
+    .podium-avatar {
+        width: 68px;
+        height: 68px;
+    }
+
+    .podium-card.gold .podium-avatar {
+        width: 82px;
+        height: 82px;
+    }
+
+    .rest-list {
+        max-width: 620px;
+    }
+}
+
+/* ---- Tablet portrait / large phone (≤ 768px) ---- */
+@media (max-width: 768px) {
+    /* Extra top padding so content clears the fixed back button */
+    body {
+        padding: 72px 16px 70px;
+    }
+
+    .btn-back {
+        top: 16px;
+        left: 16px;
+    }
+
+    /* Header fills width and stays centered */
     .header-container {
+        width: 100%;
         padding: 24px 20px 20px;
+        margin-bottom: 28px;
+        text-align: center;
     }
 
     .page-title {
         font-size: 2.2rem;
     }
 
-    .rest-row {
-        flex-wrap: wrap;
-        gap: 10px;
+    /* ---- Podium: vertical stack ---- */
+    .podium {
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        margin-bottom: 36px;
+        width: 100%;
     }
 
+    /* Correct rank order top-to-bottom: Gold → Silver → Bronze.
+       HTML renders Silver first, then Gold, then Bronze — so we
+       must explicitly assign order to override the desktop layout. */
+    .podium-item.gold   { order: 1; }
+    .podium-item.silver { order: 2; }
+    .podium-item.bronze { order: 3; }
+
+    /* Each item spans 90% of the container width */
+    .podium-item {
+        width: 90%;
+        max-width: 480px;
+        margin-bottom: 20px;
+    }
+
+    /* Full-width cards with fully rounded corners (no stand beneath) */
+    .podium-card,
+    .podium-card.gold {
+        width: 100%;
+        border-radius: 18px;
+    }
+
+    .podium-card.gold {
+        padding: 40px 24px 24px;
+    }
+
+    /* Hide podium stands — not meaningful in vertical layout */
+    .podium-stand {
+        display: none;
+    }
+
+    /* ---- Rank 4+ list full width ---- */
+    .rest-list {
+        width: 100%;
+        max-width: 560px;
+    }
+
+    .rest-row {
+        width: 100%;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 14px;
+    }
+
+    /* EXP wraps to its own line on narrow screens */
     .rest-exp {
         width: 100%;
         text-align: left;
         padding-left: 52px;
+    }
+}
+
+/* ---- Small phone (≤ 480px) ---- */
+@media (max-width: 480px) {
+    body {
+        padding: 64px 10px 60px;
+    }
+
+    .btn-back {
+        top: 10px;
+        left: 10px;
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    .header-container {
+        padding: 18px 12px 16px;
+        margin-bottom: 20px;
+        border-radius: 14px;
+    }
+
+    .page-title {
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+    }
+
+    .page-subtitle {
+        font-size: 0.8rem;
+    }
+
+    /* Slightly wider cards on small screens */
+    .podium-item {
+        width: 95%;
+        margin-bottom: 14px;
+    }
+
+    .podium-card.gold {
+        padding: 36px 16px 20px;
+    }
+
+    .podium-avatar {
+        width: 62px;
+        height: 62px;
+    }
+
+    .podium-card.gold .podium-avatar {
+        width: 76px;
+        height: 76px;
+    }
+
+    .podium-name {
+        font-size: 0.88rem;
+    }
+
+    .podium-level {
+        font-size: 1.15rem;
+    }
+
+    .rest-list {
+        gap: 8px;
+    }
+
+    .rest-row {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .rest-rank {
+        font-size: 1.1rem;
+        min-width: 28px;
+    }
+
+    .rest-avatar {
+        width: 36px;
+        height: 36px;
+    }
+
+    .rest-name {
+        font-size: 0.82rem;
+    }
+
+    .rest-level {
+        font-size: 1rem;
+        min-width: 46px;
+    }
+
+    .rest-exp {
+        font-size: 0.72rem;
+        padding-left: 44px;
+    }
+}
+
+/* ---- Large desktop (≥ 1400px) ---- */
+@media (min-width: 1400px) {
+    .podium {
+        max-width: 960px;
+        gap: 28px;
+    }
+
+    .podium-card {
+        width: 230px;
+    }
+
+    .podium-card.gold {
+        width: 250px;
+        padding: 48px 32px 32px;
+    }
+
+    .podium-stand {
+        width: 230px;
+    }
+
+    .gold-stand {
+        width: 250px;
+        height: 158px;
+    }
+
+    .silver-stand {
+        height: 114px;
+    }
+
+    .bronze-stand {
+        height: 80px;
+    }
+
+    .podium-avatar {
+        width: 90px;
+        height: 90px;
+    }
+
+    .podium-card.gold .podium-avatar {
+        width: 108px;
+        height: 108px;
+    }
+
+    .rest-list {
+        max-width: 760px;
     }
 }

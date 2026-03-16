@@ -11,6 +11,8 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
 from allauth.account.models import EmailAddress
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
@@ -193,7 +195,7 @@ def add_task(request):
         return JsonResponse({'status': 'error', 'message': 'Title is required.'}, status=400)
 
     # Validate difficulty is one of the allowed values
-    allowed = {10, 30, 50}
+    allowed = {10, 30, 50, 100}
     try:
         difficulty = int(difficulty)
         if difficulty not in allowed:
@@ -309,4 +311,22 @@ def uncomplete_task(request, task_id):
         'exp_percentage': exp_percentage,
         'next_level_exp': next_level_exp,
         'xp_lost': task.difficulty,
+    })
+
+
+@login_required(login_url='login')
+def completed_quests_view(request):
+    completed_tasks = Task.objects.filter(
+        user=request.user, status='completed'
+    ).annotate(
+        completion_date=TruncDate('completed_at')
+    ).order_by('-completed_at')
+
+    total_completed_quests = completed_tasks.count()
+    total_earned_xp = completed_tasks.aggregate(Sum('difficulty'))['difficulty__sum'] or 0
+
+    return render(request, 'core/completed_quests.html', {
+        'completed_tasks': completed_tasks,
+        'total_completed_quests': total_completed_quests,
+        'total_earned_xp': total_earned_xp,
     })
