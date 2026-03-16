@@ -61,9 +61,10 @@ def create_user_profile(sender, instance, created, **kwargs):
 class Task(models.Model):
     # ความยากง่าย (ได้ XP ต่างกัน)
     DIFFICULTY_CHOICES = [
-        (10, 'Easy (+10 XP)'),
-        (30, 'Medium (+30 XP)'),
-        (50, 'Hard (+50 XP)'),
+        (10,  'Easy (+10 XP)'),
+        (30,  'Medium (+30 XP)'),
+        (50,  'Hard (+50 XP)'),
+        (100, 'Epic (+100 XP)'),
     ]
     
     STATUS_CHOICES = [
