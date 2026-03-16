@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
+from allauth.account.models import EmailAddress
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
 
@@ -43,22 +44,25 @@ def leaderboard_view(request):
 
 
 # --- Auth views ---
-def register_view(request) : 
+def register_view(request) :
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
             user.save()
-            messages.success(request, 'Account created successfully! Welcome to Life Quest!')
-            login(request, user, backend='django.contrib.auth.backends.ModelBackend')
-            return redirect('dashboard')
+            # allauth 65+: get/create the EmailAddress record, then send the link
+            email_address, _ = EmailAddress.objects.get_or_create(
+                user=user,
+                defaults={'email': user.email, 'primary': True, 'verified': False},
+            )
+            email_address.send_confirmation(request, signup=True)
+            return redirect('account_email_verification_sent')
         else:
-            # แสดง error ถ้ากรมไม่ valid
             for field, errors in form.errors.items():
                 for error in errors:
                     messages.error(request, f'{field}: {error}')
-    else : 
+    else :
         form = RegisterForm()
     return render(request, 'core/register.html', {'form': form})
 
@@ -137,6 +141,17 @@ def login_view(request):
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
             if user is not None:
+                # Block login if email hasn't been verified yet
+                is_verified = EmailAddress.objects.filter(
+                    user=user, verified=True
+                ).exists()
+                if not is_verified:
+                    email_address, _ = EmailAddress.objects.get_or_create(
+                        user=user,
+                        defaults={'email': user.email, 'primary': True, 'verified': False},
+                    )
+                    email_address.send_confirmation(request)
+                    return redirect('account_email_verification_sent')
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect('dashboard')

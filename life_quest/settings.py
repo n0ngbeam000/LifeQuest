@@ -126,11 +126,17 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 
-LOGIN_REDIRECT_URL = '/' 
 LOGOUT_REDIRECT_URL = '/login/'
 
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
+
+# django-allauth — mandatory email verification
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_CONFIRM_EMAIL_ON_GET = True
+ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = False  # use link, not OTP passcode
+ACCOUNT_EMAIL_SUBJECT_PREFIX = ''  # prevents allauth prepending [example.com]
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {

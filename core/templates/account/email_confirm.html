@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirm Email — LifeQuest</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --accent: #eab308;
+      --accent-glow: rgba(234, 179, 8, 0.25);
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --success: #4ade80;
+      --error: #f87171;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .auth-wrapper {
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+
+    .icon-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .icon-wrap i {
+      font-size: 2.75rem;
+      color: var(--accent);
+      filter: drop-shadow(0 0 10px var(--accent-glow));
+    }
+
+    .auth-title {
+      font-family: 'VT323', monospace;
+      font-size: 2.4rem;
+      letter-spacing: 3px;
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent-glow);
+      margin-bottom: 0.25rem;
+    }
+
+    .auth-subtitle {
+      font-size: 0.875rem;
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+      line-height: 1.6;
+    }
+
+    .info-box {
+      background: rgba(234, 179, 8, 0.07);
+      border: 1px solid rgba(234, 179, 8, 0.25);
+      border-radius: 10px;
+      padding: 1.1rem 1.25rem;
+      font-size: 0.875rem;
+      color: var(--text);
+      line-height: 1.65;
+      margin-bottom: 1.75rem;
+    }
+
+    .info-box .email-highlight {
+      color: var(--accent);
+      font-weight: 600;
+      word-break: break-all;
+    }
+
+    /* Error state — shown when the confirmation key is expired/invalid */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      border-left: 3px solid transparent;
+      text-align: left;
+    }
+    .alert-error {
+      background: rgba(248, 113, 113, 0.1);
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 0.85rem;
+      background: var(--accent);
+      color: #0f172a;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: opacity 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.9;
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.85rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="icon-wrap">
+        {% if confirmation %}
+          <i class="fa-solid fa-shield-check"></i>
+        {% else %}
+          <i class="fa-solid fa-triangle-exclamation" style="color:var(--error);filter:drop-shadow(0 0 8px rgba(248,113,113,0.3));"></i>
+        {% endif %}
+      </div>
+
+      <h1 class="auth-title">
+        {% if confirmation %}CONFIRM EMAIL{% else %}INVALID LINK{% endif %}
+      </h1>
+      <p class="auth-subtitle">
+        {% if confirmation %}Verify your identity to unlock your account{% else %}This confirmation link has expired or is invalid{% endif %}
+      </p>
+
+      {% if confirmation %}
+        <div class="info-box">
+          Please confirm that
+          <span class="email-highlight">{{ confirmation.email_address.email }}</span>
+          is your email address and that you want to verify your account.
+        </div>
+
+        {# POST fallback — used when ACCOUNT_CONFIRM_EMAIL_ON_GET is False or as a safety net #}
+        <form method="POST" action="">
+          {% csrf_token %}
+          <button type="submit" class="btn-submit">
+            <i class="fa-solid fa-circle-check" style="margin-right:8px;"></i>CONFIRM EMAIL
+          </button>
+        </form>
+
+      {% else %}
+        <div class="alert alert-error">
+          <i class="fa-solid fa-circle-xmark" style="margin-right:6px;"></i>
+          This confirmation link is invalid or has already been used. Please register again or request a new link.
+        </div>
+      {% endif %}
+
+      <a href="{% url 'login' %}" class="back-link">
+        ← Back to login
+      </a>
+
+    </div>
+  </div>
+</body>
+</html>
