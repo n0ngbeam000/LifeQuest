@@ -103,7 +103,7 @@ body.auth-page::after {
     transform: translateY(0);
   }
 }
-
+/*/
 /* ---------- Auth Card ---------- */
 .auth-card {
   position: relative;
