@@ -11,6 +11,11 @@ python-dateutil==2.9.0.post0
 
 # Database
 psycopg2-binary==2.9.11
+dj-database-url==2.3.0
+
+# Production server & static files
+gunicorn==23.0.0
+whitenoise==6.9.0
 
 # Authentication
 django-allauth[socialaccount]==65.15.0
