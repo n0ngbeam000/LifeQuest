@@ -29,11 +29,11 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://*.up.railway.app',
-]
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
+
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
 
 
 # Application definition
@@ -90,8 +90,14 @@ WSGI_APPLICATION = 'life_quest.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASE_URL = os.environ.get('DATABASE_URL', '')
-ON_RAILWAY = bool(os.environ.get('RAILWAY_ENVIRONMENT'))
+
+DATABASES = {
+    'default': dj_database_url.config(
+        default=os.environ.get('DATABASE_URL', 'sqlite:///db.sqlite3'),
+        conn_max_age=600,
+    )
+}
+
 
 if DATABASE_URL and (ON_RAILWAY or 'railway.internal' not in DATABASE_URL):
     DATABASES = {
