@@ -58,7 +58,15 @@ def register_view(request) :
                 user=user,
                 defaults={'email': user.email, 'primary': True, 'verified': False},
             )
-            email_address.send_confirmation(request, signup=True)
+            try:
+                email_address.send_confirmation(request, signup=True)
+            except Exception:
+                messages.warning(
+                    request,
+                    'Account created but we could not send a verification email. '
+                    'Please contact support or try resending from your profile.'
+                )
+                return redirect('login')
             return redirect('account_email_verification_sent')
         else:
             for field, errors in form.errors.items():
