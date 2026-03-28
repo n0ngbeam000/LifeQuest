@@ -129,22 +129,18 @@ LOGOUT_REDIRECT_URL = '/login/'
 SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_AUTO_SIGNUP = True          # skip the extra sign-up form for OAuth
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none' # don't require email verify for social logins
+SOCIALACCOUNT_ADAPTER = 'core.adapters.NoSignupFormSocialAdapter'  # auto-generate username
 
 # django-allauth — email verification disabled for deployment
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
-ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'https'   # required for Render/Railway deployment
+ACCOUNT_DEFAULT_HTTP_PROTOCOL = 'http' if DEBUG else 'https'  # https only on Render
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = False
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ''
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
-        'APP': {
-            'client_id': os.getenv('GOOGLE_CLIENT_ID'),
-            'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
-            'key': ''
-        },
         'SCOPE': [
             'profile',
             'email',
