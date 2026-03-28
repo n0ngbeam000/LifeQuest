@@ -27,7 +27,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 
 ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
@@ -128,9 +128,9 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
-# django-allauth — mandatory email verification
+# django-allauth — email verification disabled for deployment
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
-ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = False  # use link, not OTP passcode
 ACCOUNT_EMAIL_SUBJECT_PREFIX = ''  # prevents allauth prepending [example.com]
@@ -174,12 +174,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 
-# Email configuration (Gmail SMTP)
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
-EMAIL_TIMEOUT = 10  # fail fast instead of hanging the worker
+# Email configuration — SMTP disabled; console backend used (no verification needed)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+# DEFAULT_FROM_EMAIL = os.getenv('EMAIL_HOST_USER')
+# EMAIL_TIMEOUT = 10
