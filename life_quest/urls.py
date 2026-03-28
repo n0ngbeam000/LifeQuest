@@ -35,10 +35,10 @@ urlpatterns = [
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
     path('completed/', views.completed_quests_view, name='completed_quests'),
 
-    # Password reset
-    path('forgot-password/', views.forgot_password, name='forgot_password'),
-    path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
-    path('reset-password/done/', views.reset_password_done, name='reset_password_done'),
+    # Password reset (disabled — uncomment to re-enable)
+    # path('forgot-password/', views.forgot_password, name='forgot_password'),
+    # path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
+    # path('reset-password/done/', views.reset_password_done, name='reset_password_done'),
 
     path('accounts/', include('allauth.urls')),
 ]
