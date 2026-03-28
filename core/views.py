@@ -20,6 +20,10 @@ from .models import Task, UserProfile
 User = get_user_model()
 
 
+def social_login_cancelled(request):
+    """Redirect allauth's 'Login Cancelled' page back to our login page."""
+    return redirect('login')
+
 
 # --- Leaderboard view ---
 @login_required(login_url='login')

@@ -40,5 +40,9 @@ urlpatterns = [
     # path('reset-password/<uidb64>/<token>/', views.reset_password, name='reset_password'),
     # path('reset-password/done/', views.reset_password_done, name='reset_password_done'),
 
+    # Redirect allauth's "Login Cancelled" page back to our login page
+    path('accounts/3rdparty/login/cancelled/', views.social_login_cancelled, name='socialaccount_login_cancelled'),
+
     path('accounts/', include('allauth.urls')),
+
 ]
