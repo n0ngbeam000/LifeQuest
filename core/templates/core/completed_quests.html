@@ -454,18 +454,26 @@
                         <div class="quest-meta">
                             <span class="quest-time">
                                 <i class="far fa-clock"></i>
-                                {{ task.completed_at|date:"h:i A" }}
+                                Completed: {{ task.completed_at|date:"h:i A" }}
                             </span>
-                            <span class="quest-xp">+{{ task.difficulty }} XP</span>
-                            {% if task.difficulty == 100 %}
-                                <span class="difficulty-badge epic">EPIC</span>
-                            {% elif task.difficulty == 50 %}
-                                <span class="difficulty-badge hard">HARD</span>
-                            {% elif task.difficulty == 30 %}
-                                <span class="difficulty-badge medium">MEDIUM</span>
-                            {% else %}
-                                <span class="difficulty-badge easy">EASY</span>
+                            {% if task.due_date %}
+                            <span class="quest-time" style="color:#f59e0b; background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:20px; padding:1px 8px;">
+                                <i class="fas fa-fire" style="color:#f59e0b; font-size:0.65rem;"></i>
+                                Due: {{ task.due_date|date:"M d, h:i A" }}
+                            </span>
                             {% endif %}
+                            <div style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                                <span class="quest-xp">+{{ task.difficulty }} XP</span>
+                                {% if task.difficulty == 100 %}
+                                    <span class="difficulty-badge epic">EPIC</span>
+                                {% elif task.difficulty == 50 %}
+                                    <span class="difficulty-badge hard">HARD</span>
+                                {% elif task.difficulty == 30 %}
+                                    <span class="difficulty-badge medium">MEDIUM</span>
+                                {% else %}
+                                    <span class="difficulty-badge easy">EASY</span>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 

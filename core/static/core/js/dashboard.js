@@ -189,11 +189,14 @@ function handleAddTask(e) {
         headers: { 'X-CSRFToken': getCsrfToken() },
         body: new FormData(form),
     })
-        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(res => { if (!res.ok && res.status !== 400) throw new Error(res.status); return res.json(); })
         .then(data => {
             if (data.status === 'success') {
                 titleInput.value = '';
                 diffSelect.value = '10';
+                // Reset datetime input
+                const dateInput = form.querySelector('#due-date-input');
+                if (dateInput) dateInput.value = '';
                 // Reset trigger button to Easy
                 const trigger = document.getElementById('diff-trigger');
                 if (trigger) {
@@ -243,7 +246,7 @@ function completeQuest(btn) {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(res => { if (!res.ok && res.status !== 400) throw new Error(res.status); return res.json(); })
         .then(data => {
             if (data.status === 'success') {
                 if (questItem) {
@@ -327,7 +330,7 @@ function executeDeleteQuest() {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(res => { if (!res.ok && res.status !== 400) throw new Error(res.status); return res.json(); })
         .then(data => {
             if (data.status === 'success') {
                 if (questItem) {
@@ -343,7 +346,14 @@ function executeDeleteQuest() {
                         }
                     }, 500);
                 }
-                showToast('Quest deleted.', 'info', 3000);
+
+                // 🎯 Real-time HP + stat update
+                updatePlayerStats(data);
+
+                // 📢 Toast using message from backend
+                const toastMsg = data.message || 'Quest deleted.';
+                const toastType = data.hp_lost > 0 ? 'error' : 'info';
+                showToast(toastMsg, toastType, 3500);
             }
         })
         .catch(err => {
@@ -365,7 +375,7 @@ function undoQuest(btn) {
         method: 'POST',
         headers: { 'X-CSRFToken': getCsrfToken() },
     })
-        .then(res => { if (!res.ok) throw new Error(res.status); return res.json(); })
+        .then(res => { if (!res.ok && res.status !== 400) throw new Error(res.status); return res.json(); })
         .then(data => {
             if (data.status === 'success') {
                 if (questItem) {
@@ -425,9 +435,12 @@ function getQuestUrl(action, taskId) {
  * Uses escapeHtml to prevent XSS from user-supplied titles.
  */
 function buildActiveQuestHTML(quest) {
-    const { id, title, difficulty, created_at } = quest;
+    const { id, title, difficulty, created_at, due_date } = quest;
     const diffMap = { 100: ['epic', 'EPIC'], 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
     const [cls, label] = diffMap[difficulty] || ['easy', 'EASY'];
+    const dueDateHtml = due_date
+        ? `<span class="quest-due-date"><i class="fas fa-fire"></i> Due: ${escapeHtml(due_date)}</span>`
+        : '';
 
     return `
     <div class="quest-item active" id="quest-${id}" style="animation:slideInUp 0.35s ease-out;">
@@ -446,6 +459,7 @@ function buildActiveQuestHTML(quest) {
                 <span class="quest-timestamp">
                     <i class="far fa-clock"></i> ${created_at}
                 </span>
+                ${dueDateHtml}
             </div>
         </div>
         <div class="quest-actions">

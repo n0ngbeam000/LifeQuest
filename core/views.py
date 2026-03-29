@@ -275,18 +275,40 @@ def add_task(request):
     except (ValueError, TypeError):
         return JsonResponse({'status': 'error', 'message': 'Invalid difficulty.'}, status=400)
     
-    # Parse due_date
+    # Parse due_date — accepts datetime-local format (YYYY-MM-DDTHH:MM)
     try:
         from datetime import datetime
-        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        # Try datetime-local format first, fall back to date-only
+        for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+            try:
+                due_date = datetime.strptime(due_date_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            raise ValueError('No valid format matched')
     except ValueError:
-        return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
+        return JsonResponse({'status': 'error', 'message': 'Invalid date/time format. Use YYYY-MM-DDTHH:MM.'}, status=400)
+
+    # ✅ Strict server-side check: due_date must be in the future
+    # Make due_date timezone-aware for comparison
+    from django.utils.timezone import make_aware
+    if timezone.is_naive(due_date):
+        due_date_aware = make_aware(due_date)
+    else:
+        due_date_aware = due_date
+
+    if due_date_aware < timezone.now():
+        return JsonResponse({
+            'status': 'error',
+            'message': '⚠️ Deadline must be in the future. Please pick a later date and time.'
+        }, status=400)
 
     task = Task.objects.create(
         user=request.user,
         title=title,
         difficulty=difficulty,
-        due_date=due_date,
+        due_date=due_date_aware,
     )
 
     return JsonResponse({
@@ -295,7 +317,7 @@ def add_task(request):
             'id': task.id,
             'title': task.title,
             'difficulty': task.difficulty,
-            'due_date': task.due_date.strftime('%Y-%m-%d'),
+            'due_date': task.due_date.strftime('%b %d, %I:%M %p'),
             'created_at': task.created_at.strftime('%b %d, %I:%M %p'),
         },
     })
@@ -337,8 +359,8 @@ def complete_task(request, task_id):
         profile.exp += xp_gained
         profile.daily_xp_count += xp_gained
         
-        # Random coin drop (50% chance to get 10 coins)
-        if random.random() < 0.5:
+        # True random coin drop: 30% chance to earn 10 coins
+        if random.random() < 0.3:
             coins_gained = 10
             profile.coins += coins_gained
         
@@ -374,20 +396,15 @@ def complete_task(request, task_id):
     exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
     hp_percentage = round((profile.hp / 100) * 100, 2)
     
-    # Build success message
-    message_parts = [f"✅ Quest Completed!"]
-    if xp_gained > 0:
-        message_parts.append(f"+{xp_gained} XP")
-    if coins_gained > 0:
-        message_parts.append(f"+{coins_gained} Coins 💰")
-    if hp_gained > 0:
-        message_parts.append(f"+{hp_gained} HP ❤️")
-    if leveled_up:
-        message_parts.append(f"🎉 Level Up! Now Lv.{profile.level}")
+    # Build conditional toast message per spec:
+    # - Coin drop  → "Quest Completed! + 10 coin"
+    # - No coin    → "Quest Completed!"
     if cap_reached:
-        message_parts = ["⚠️ Daily XP cap reached (678/678). Task completed but no rewards."]
-    
-    message = " | ".join(message_parts)
+        message = "⚠️ Daily XP cap reached (678/678). Task completed but no rewards."
+    elif task.coins_earned > 0:
+        message = "Quest Completed! + 10 coin"
+    else:
+        message = "Quest Completed!"
 
     return JsonResponse({
         'status': 'success',
@@ -440,7 +457,15 @@ def delete_task(request, task_id):
     task.delete()
     
     hp_percentage = round((profile.hp / 100) * 100, 2)
+    next_level_exp = profile.get_next_level_exp()
+    exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
     
+    # Determine message based on whether it was an active or completed quest
+    if hp_lost > 0:
+        message = f'Quest Abandoned! -{hp_lost} HP'
+    else:
+        message = 'Completed quest removed.'
+
     return JsonResponse({
         'status': 'success',
         'quest_id': task_id,
@@ -450,7 +475,10 @@ def delete_task(request, task_id):
         'game_over': game_over,
         'new_level': profile.level,
         'new_exp': profile.exp,
+        'next_level_exp': next_level_exp,
+        'exp_percentage': exp_percentage,
         'new_coins': profile.coins,
+        'message': message,
     })
 
 
@@ -552,13 +580,8 @@ def uncomplete_task(request, task_id):
             'completed_at': replacement.completed_at.strftime('%b %d, %I:%M %p'),
         }
     
-    # Build message
-    message_parts = ["⏪ Quest Undone"]
-    if task.difficulty > 0:
-        message_parts.append(f"-{task.difficulty} XP")
-    if coins_lost > 0:
-        message_parts.append(f"-{coins_lost} Coins 💰")
-    message = " | ".join(message_parts)
+    # Simple undo message per spec
+    message = "Quest Undone"
 
     return JsonResponse({
         'status': 'success',

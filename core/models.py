@@ -90,7 +90,7 @@ class Task(models.Model):
     completed_at = models.DateTimeField(null=True, blank=True)  # set when task is completed
     
     # Deadline and Penalty System
-    due_date = models.DateField()  # Required deadline for the task
+    due_date = models.DateTimeField()  # Required deadline (date + time) for the task
     deadline_extensions = models.IntegerField(default=0)  # Track extension purchases (max 3)
     last_damage_date = models.DateField(null=True, blank=True)  # Track overdue damage application
     

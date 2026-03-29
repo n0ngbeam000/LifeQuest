@@ -144,6 +144,33 @@
                        maxlength="200"
                        autocomplete="off">
 
+                <!-- Due Date & Time Picker -->
+                <div class="datetime-picker-wrap">
+                    <i class="far fa-calendar-alt datetime-icon"></i>
+                    <input type="datetime-local"
+                           name="due_date"
+                           id="due-date-input"
+                           class="form-datetime"
+                           required
+                           title="Set quest deadline">
+                </div>
+                <script>
+                    /* Set min to "now" so the browser disables past times */
+                    (function () {
+                        var input = document.getElementById('due-date-input');
+                        function setMin() {
+                            var now = new Date();
+                            now.setSeconds(0, 0);
+                            var pad = function(n){ return String(n).padStart(2,'0'); };
+                            var local = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' +
+                                        pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+                            input.min = local;
+                        }
+                        setMin();
+                        setInterval(setMin, 60000); /* re-check every minute */
+                    })();
+                </script>
+
                 <!-- Custom Gamified Difficulty Dropdown -->
                 <div class="diff-dropdown" id="diff-dropdown">
                     <!-- Hidden input that carries the value on form submit -->
@@ -238,6 +265,10 @@
                             <span class="quest-timestamp">
                                 <i class="far fa-clock"></i>
                                 {{ task.created_at|date:"M d, h:i A" }}
+                            </span>
+                            <span class="quest-due-date">
+                                <i class="fas fa-fire"></i>
+                                Due: {{ task.due_date|date:"M d, h:i A" }}
                             </span>
                         </div>
                     </div>
