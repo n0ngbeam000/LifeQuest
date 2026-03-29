@@ -1060,6 +1060,34 @@ body {
     color: #ff6b6b;
 }
 
+/* Extension Badge Interactive state */
+.btn-extend-deadline {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.btn-extend-deadline:hover:not(.disabled) {
+    transform: translateY(-1px) scale(1.03);
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.btn-extend-deadline:active:not(.disabled) {
+    transform: translateY(0) scale(0.98);
+}
+
+.btn-extend-deadline.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
+.btn-extend-deadline.disabled i {
+    color: var(--text-muted);
+}
+
 /* ===== DIFFICULTY BADGES ===== */
 .quest-badge {
     padding: 3px 10px;
@@ -1582,6 +1610,131 @@ body {
     }
 
     .modal-actions {
+        flex-direction: column;
+    }
+}
+
+/* ========== EXTEND DEADLINE MODAL ========== */
+.extend-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0, 0, 0, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    backdrop-filter: blur(3px);
+}
+
+.extend-modal-overlay.active {
+    opacity: 1;
+    pointer-events: all;
+    animation: modalFadeIn 0.25s ease;
+}
+
+.extend-modal-box {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 18px;
+    padding: 40px 36px 32px;
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    animation: modalPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    position: relative;
+}
+
+.extend-modal-icon-wrap {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1.5px solid rgba(245, 158, 11, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    font-size: 1.9rem;
+    color: var(--accent-gold);
+    animation: iconPulseGold 2.2s ease-in-out infinite;
+}
+
+@keyframes iconPulseGold {
+    0%, 100% { transform: scale(1); color: var(--accent-gold); }
+    50% { transform: scale(1.15); color: #fbbf24; }
+}
+
+.extend-modal-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #f8fafc;
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+}
+
+.extend-modal-body {
+    font-size: 0.9rem;
+    color: #94a3b8;
+    line-height: 1.6;
+    margin-bottom: 24px;
+}
+
+.extend-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-modal-submit {
+    flex: 1;
+    padding: 12px 20px;
+    background: var(--accent-gold);
+    border: 1px solid #d97706;
+    border-radius: 10px;
+    color: #0f172a;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+    box-shadow: 0 4px 16px rgba(245, 158, 11, 0.3);
+}
+
+.btn-modal-submit:hover {
+    background: #fbbf24;
+    box-shadow: 0 6px 22px rgba(245, 158, 11, 0.45);
+    transform: translateY(-1px);
+}
+
+.btn-modal-submit:active {
+    background: #b45309;
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* Extension Input inside modal */
+.form-datetime-modal {
+    background: rgba(0,0,0,0.2) !important;
+    border-color: rgba(255,193,7,0.3) !important;
+    padding: 14px 18px !important;
+    font-size: 0.9rem !important;
+    color: var(--text-primary) !important;
+}
+
+@media (max-width: 480px) {
+    .extend-modal-box {
+        margin: 16px;
+        padding: 30px 22px 24px;
+    }
+    .extend-modal-actions {
         flex-direction: column;
     }
 }

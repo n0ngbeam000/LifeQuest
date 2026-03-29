@@ -266,7 +266,12 @@
                                 <i class="far fa-clock"></i>
                                 {{ task.created_at|date:"M d, h:i A" }}
                             </span>
-                            <span class="quest-due-date">
+                            <span class="quest-due-date btn-extend-deadline {% if task.deadline_extensions >= 3 %}disabled{% endif %}"
+                                  data-action="extend"
+                                  data-task-id="{{ task.id }}"
+                                  data-extensions="{{ task.deadline_extensions }}"
+                                  data-due="{{ task.due_date|date:'c' }}"
+                                  title="Extend Deadline Shop">
                                 <i class="fas fa-fire"></i>
                                 Due: {{ task.due_date|date:"M d, h:i A" }}
                             </span>
@@ -379,6 +384,33 @@
         </div>
     </div>
 
+    <!-- ========== EXTEND DEADLINE MODAL ========== -->
+    <div class="extend-modal-overlay" id="extend-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="extend-title">
+        <div class="extend-modal-box">
+            <div class="extend-modal-icon-wrap">
+                <i class="fas fa-clock"></i>
+            </div>
+            <h2 class="extend-modal-title" id="extend-title">Extend Deadline</h2>
+            <p class="extend-modal-body">
+                Need more time? Purchase a deadline extension!<br>
+                <strong id="extend-cost-display">Cost: -- Coins</strong>
+            </p>
+            
+            <div style="margin-bottom: 24px;">
+                <input type="datetime-local" id="extend-deadline-input" class="form-input form-datetime-modal" style="width:100%;" required>
+            </div>
+
+            <div class="extend-modal-actions">
+                <button class="btn-modal-cancel" id="extend-cancel-btn" type="button">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn-modal-submit" id="extend-submit-btn" type="button">
+                    <i class="fas fa-coins"></i> Pay & Extend
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ========== MOBILE MENU OVERLAY ========== -->
     <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
 
@@ -469,6 +501,7 @@
         complete: "{% url 'complete_task' 0 %}",
         delete:   "{% url 'delete_task' 0 %}",
         undo:     "{% url 'uncomplete_task' 0 %}",
+        extend:   "{% url 'extend_deadline' 0 %}",
     };
     </script>
 

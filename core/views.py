@@ -623,3 +623,74 @@ def completed_quests_view(request):
         'total_completed_quests': total_completed_quests,
         'total_earned_xp': total_earned_xp,
     })
+
+@login_required
+@require_POST
+def extend_deadline(request, task_id):
+    """
+    Extend Deadline Shop
+    Costs: 1st extension = 2 coins, 2nd = 5 coins, 3rd = 10 coins.
+    Max 3 extensions allowed.
+    """
+    task = get_object_or_404(Task, id=task_id, user=request.user)
+    
+    if task.status != 'pending':
+        return JsonResponse({'status': 'error', 'message': 'Only active quests can be extended.'}, status=400)
+        
+    if task.deadline_extensions >= 3:
+        return JsonResponse({'status': 'error', 'message': 'Maximum extensions reached (3/3).'}, status=400)
+        
+    # Calculate cost based on current extensions
+    costs = {0: 2, 1: 5, 2: 10}
+    cost = costs.get(task.deadline_extensions, 10)
+    
+    profile = request.user.profile
+    if profile.coins < cost:
+        return JsonResponse({'status': 'error', 'message': 'Not enough coins.'}, status=400)
+        
+    new_due_date_str = request.POST.get('new_due_date', '').strip()
+    if not new_due_date_str:
+        return JsonResponse({'status': 'error', 'message': 'New deadline is required.'}, status=400)
+        
+    # Parse new_due_date
+    try:
+        from datetime import datetime
+        for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%d'):
+            try:
+                due_date = datetime.strptime(new_due_date_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            raise ValueError('No valid format matched')
+    except ValueError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid date/time format. Use YYYY-MM-DDTHH:MM.'}, status=400)
+        
+    # Make timezone-aware and check future
+    from django.utils.timezone import make_aware, is_naive
+    if is_naive(due_date):
+        due_date_aware = make_aware(due_date)
+    else:
+        due_date_aware = due_date
+
+    if due_date_aware <= timezone.now():
+        return JsonResponse({
+            'status': 'error',
+            'message': '⚠️ Deadline must be in the future. Please pick a later date and time.'
+        }, status=400)
+        
+    # Transaction
+    profile.coins -= cost
+    profile.save()
+    
+    task.due_date = due_date_aware
+    task.deadline_extensions += 1
+    task.save()
+    
+    return JsonResponse({
+        'status': 'success',
+        'new_coins': profile.coins,
+        'due_date_str': task.due_date.strftime('%b %d, %I:%M %p'),
+        'new_extensions': task.deadline_extensions,
+        'message': f'Deadline extended! -{cost} Coins'
+    })

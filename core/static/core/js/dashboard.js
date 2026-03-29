@@ -8,6 +8,10 @@
 let currentQuestElement = null;
 let currentQuestId = null;
 
+/* ========== EXTEND MODAL STATE ========== */
+let currentExtendBtn = null;
+let currentExtendTaskId = null;
+
 document.addEventListener('DOMContentLoaded', function () {
     console.log('✓ Dashboard initialized');
 
@@ -135,6 +139,20 @@ function initializeEventListeners() {
             if (e.target === overlay) hideDeleteModal();
         });
     }
+
+    // --- Extend Deadline Modal Buttons ---
+    const extendCancelBtn = document.getElementById('extend-cancel-btn');
+    const extendSubmitBtn = document.getElementById('extend-submit-btn');
+    const extendOverlay = document.getElementById('extend-modal-overlay');
+
+    if (extendCancelBtn) extendCancelBtn.addEventListener('click', closeExtendModal);
+    if (extendSubmitBtn) extendSubmitBtn.addEventListener('click', executeExtendDeadline);
+
+    if (extendOverlay) {
+        extendOverlay.addEventListener('click', function(e) {
+            if (e.target === extendOverlay) closeExtendModal();
+        });
+    }
 }
 
 /* ========== BOOTSTRAP TOOLTIPS ========== */
@@ -169,7 +187,123 @@ function handleQuestAction(e) {
     } else if (action === 'undo') {
         e.preventDefault();
         undoQuest(btn);
+    } else if (action === 'extend') {
+        e.preventDefault();
+        if (!btn.classList.contains('disabled')) {
+            openExtendModal(btn);
+        }
     }
+}
+
+/* ========== EXTEND DEADLINE MODAL & LOGIC ========== */
+
+function openExtendModal(btn) {
+    currentExtendBtn = btn;
+    currentExtendTaskId = btn.dataset.taskId;
+    const extensions = parseInt(btn.dataset.extensions) || 0;
+    
+    // Safety check - shouldn't happen if button disabled correctly
+    if (extensions >= 3) {
+        showToast('Maximum extensions reached.', 'error');
+        return;
+    }
+
+    // Calculate dynamic cost locally
+    let cost = 10;
+    if (extensions === 0) cost = 2;
+    else if (extensions === 1) cost = 5;
+    
+    // Update modal text
+    const costDisplay = document.getElementById('extend-cost-display');
+    if (costDisplay) {
+        costDisplay.innerHTML = `Cost: <span style="color:var(--accent-gold);">${cost} Coins</span>`;
+    }
+
+    // Prepare Date Input (Set min to 'now' so no past dates)
+    const input = document.getElementById('extend-deadline-input');
+    if (input) {
+        input.value = '';
+        // Set min to current time
+        const now = new Date();
+        now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+        input.min = now.toISOString().slice(0, 16);
+    }
+    
+    // Show Modal
+    const overlay = document.getElementById('extend-modal-overlay');
+    if (overlay) overlay.classList.add('active');
+}
+
+function closeExtendModal() {
+    currentExtendTaskId = null;
+    currentExtendBtn = null;
+    
+    const overlay = document.getElementById('extend-modal-overlay');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function executeExtendDeadline() {
+    if (!currentExtendTaskId) return;
+
+    const input = document.getElementById('extend-deadline-input');
+    const newDueDate = input ? input.value : '';
+    
+    if (!newDueDate) {
+        showToast('Please select a new deadline.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('extend-submit-btn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Processing...';
+    btn.disabled = true;
+
+    // Use dynamic URL pattern replacement
+    let url = window.QUEST_URLS.extend; 
+    url = url.replace('0', currentExtendTaskId);
+
+    const formData = new FormData();
+    formData.append('new_due_date', newDueDate);
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() },
+        body: formData,
+    })
+    .then(res => {
+        if (!res.ok && res.status !== 400) throw new Error(res.status);
+        return res.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            // Update Coin Counter on UI
+            const coinLabel = document.querySelector('.mobile-menu-coins .coins-value') || 
+                              document.querySelector('.sidebar .coins-value');
+            if (coinLabel) coinLabel.textContent = data.new_coins; // Fallback update
+            
+            // Re-render button text and attributes
+            if (currentExtendBtn) {
+                currentExtendBtn.innerHTML = `<i class="fas fa-fire"></i> Due: ${data.due_date_str}`;
+                currentExtendBtn.dataset.extensions = data.new_extensions;
+                if (data.new_extensions >= 3) {
+                    currentExtendBtn.classList.add('disabled');
+                }
+            }
+            
+            showToast(data.message || 'Deadline extended!', 'success', 3000);
+            closeExtendModal();
+        } else {
+            showToast(data.message || 'Failed to extend deadline.', 'error', 4000);
+        }
+    })
+    .catch(err => {
+        console.error('Extend deadline error:', err);
+        showToast('Something went wrong. Please try again.', 'error', 4000);
+    })
+    .finally(() => {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
 }
 
 /* ========== ADD TASK (AJAX) ========== */
@@ -439,7 +573,14 @@ function buildActiveQuestHTML(quest) {
     const diffMap = { 100: ['epic', 'EPIC'], 50: ['hard', 'HARD'], 30: ['medium', 'MEDIUM'], 10: ['easy', 'EASY'] };
     const [cls, label] = diffMap[difficulty] || ['easy', 'EASY'];
     const dueDateHtml = due_date
-        ? `<span class="quest-due-date"><i class="fas fa-fire"></i> Due: ${escapeHtml(due_date)}</span>`
+        ? `<span class="quest-due-date btn-extend-deadline"
+                 data-action="extend"
+                 data-task-id="${id}"
+                 data-extensions="0"
+                 data-due="${escapeHtml(due_date)}"
+                 title="Extend Deadline Shop">
+             <i class="fas fa-fire"></i> Due: ${escapeHtml(due_date)}
+           </span>`
         : '';
 
     return `
