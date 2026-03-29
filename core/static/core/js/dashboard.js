@@ -276,10 +276,12 @@ function executeExtendDeadline() {
     })
     .then(data => {
         if (data.status === 'success') {
-            // Update Coin Counter on UI
-            const coinLabel = document.querySelector('.mobile-menu-coins .coins-value') || 
-                              document.querySelector('.sidebar .coins-value');
-            if (coinLabel) coinLabel.textContent = data.new_coins; // Fallback update
+            // Update all coin counters (sidebar + mobile) without reloading.
+            if (data.new_coins !== undefined) {
+                document.querySelectorAll('.coins-value').forEach(el => {
+                    el.textContent = data.new_coins;
+                });
+            }
             
             // Re-render button text and attributes
             if (currentExtendBtn) {
