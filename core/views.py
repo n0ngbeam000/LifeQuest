@@ -16,8 +16,69 @@ from django.db.models.functions import TruncDate
 from allauth.account.models import EmailAddress
 from .forms import RegisterForm, LoginForm
 from .models import Task, UserProfile
+import random
+from datetime import timedelta
 
 User = get_user_model()
+
+
+# ========== HELPER FUNCTIONS ==========
+
+def reset_daily_limits(profile):
+    """Reset daily counters if a new day has started."""
+    today = timezone.now().date()
+    if today > profile.last_daily_reset:
+        profile.daily_xp_count = 0
+        profile.daily_hp_healed = 0
+        profile.last_daily_reset = today
+        profile.save()
+
+
+def check_game_over(profile):
+    """
+    Check if HP <= 0, trigger Game Over.
+    Game Over resets: level = 1, xp = 0, hp = 100
+    """
+    if profile.hp <= 0:
+        profile.level = 1
+        profile.exp = 0
+        profile.hp = 100
+        profile.coins = 0  # Optional: reset coins too
+        profile.daily_xp_count = 0
+        profile.daily_hp_healed = 0
+        profile.save()
+        return True
+    return False
+
+
+def apply_overdue_damage(user):
+    """
+    Apply overdue damage for all overdue tasks.
+    For each overdue task where due_date < today and last_damage_date != today:
+    - Deduct 5 HP
+    - Update last_damage_date to today
+    """
+    today = timezone.now().date()
+    profile = user.profile
+    
+    overdue_tasks = Task.objects.filter(
+        user=user,
+        status='pending',
+        due_date__lt=today
+    ).exclude(last_damage_date=today)
+    
+    total_damage = 0
+    for task in overdue_tasks:
+        profile.hp -= 5
+        task.last_damage_date = today
+        task.save()
+        total_damage += 5
+    
+    if total_damage > 0:
+        profile.save()
+        check_game_over(profile)
+    
+    return total_damage
 
 
 def social_login_cancelled(request):
@@ -160,15 +221,27 @@ def login_view(request):
 @login_required(login_url='login')
 def dashboard_view(request):
     user = request.user
-    #
-    active_tasks = Task.objects.filter(user=user, status='pending').order_by('created_at')
-    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-created_at')[:3] # get the least of 3 task
-    completed_count = Task.objects.filter(user=user ,status='completed').count()
-
     profile = user.profile
+    
+    # STEP 1: Reset daily limits if new day
+    reset_daily_limits(profile)
+    
+    # STEP 2: Apply overdue damage for all overdue tasks
+    damage_taken = apply_overdue_damage(user)
+    if damage_taken > 0:
+        messages.warning(request, f'⚠️ Overdue tasks dealt {damage_taken} HP damage!')
+    
+    # Fetch tasks
+    active_tasks = Task.objects.filter(user=user, status='pending').order_by('due_date')
+    complete_tasks = Task.objects.filter(user=user, status='completed').order_by('-completed_at')[:3]
+    completed_count = Task.objects.filter(user=user, status='completed').count()
+
     next_level_exp = profile.get_next_level_exp()
-    xp_percentage = (profile.exp / next_level_exp) * 100 ## i don't want it baby
+    xp_percentage = (profile.exp / next_level_exp) * 100
     exp_remaining = next_level_exp - profile.exp
+    
+    # HP percentage for UI
+    hp_percentage = (profile.hp / 100) * 100
 
     context = {
         'active_tasks': active_tasks,
@@ -177,16 +250,21 @@ def dashboard_view(request):
         'xp_percentage': xp_percentage,
         'next_level_exp': next_level_exp,
         'exp_remaining': exp_remaining,
+        'hp_percentage': hp_percentage,
     }
-    return render(request, 'core/dashboard.html',context)
+    return render(request, 'core/dashboard.html', context)
 @login_required
 @require_POST
 def add_task(request):
     title = request.POST.get('title', '').strip()
     difficulty = request.POST.get('difficulty', '10')
+    due_date_str = request.POST.get('due_date', '').strip()
 
     if not title:
         return JsonResponse({'status': 'error', 'message': 'Title is required.'}, status=400)
+    
+    if not due_date_str:
+        return JsonResponse({'status': 'error', 'message': 'Due date is required.'}, status=400)
 
     # Validate difficulty is one of the allowed values
     allowed = {10, 30, 50, 100}
@@ -196,11 +274,19 @@ def add_task(request):
             raise ValueError
     except (ValueError, TypeError):
         return JsonResponse({'status': 'error', 'message': 'Invalid difficulty.'}, status=400)
+    
+    # Parse due_date
+    try:
+        from datetime import datetime
+        due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid date format.'}, status=400)
 
     task = Task.objects.create(
         user=request.user,
         title=title,
         difficulty=difficulty,
+        due_date=due_date,
     )
 
     return JsonResponse({
@@ -209,6 +295,7 @@ def add_task(request):
             'id': task.id,
             'title': task.title,
             'difficulty': task.difficulty,
+            'due_date': task.due_date.strftime('%Y-%m-%d'),
             'created_at': task.created_at.strftime('%b %d, %I:%M %p'),
         },
     })
@@ -216,22 +303,72 @@ def add_task(request):
 @login_required
 @require_POST
 def complete_task(request, task_id):
+    """
+    STEP 2: Task Completion Logic
+    - Reset daily limits if new day
+    - Check daily XP cap (678)
+    - Award XP and random coin drop (10 coins with random chance)
+    - HP recovery (+2 HP per task, max +10/day, cap at 100)
+    - Level up and instant heal to 100 HP
+    """
     task = get_object_or_404(Task, id=task_id, user=request.user)
 
     if task.status != 'pending':
         return JsonResponse({'status': 'error', 'message': 'Task already completed.'}, status=400)
 
+    profile = request.user.profile
+    
+    # Reset daily limits if new day
+    reset_daily_limits(profile)
+    
+    # Task XP value
+    task_xp = task.difficulty
+    
+    # Check daily XP cap (678)
+    xp_gained = 0
+    coins_gained = 0
+    hp_gained = 0
+    cap_reached = False
+    
+    if profile.daily_xp_count + task_xp <= 678:
+        # Award XP
+        xp_gained = task_xp
+        profile.exp += xp_gained
+        profile.daily_xp_count += xp_gained
+        
+        # Random coin drop (50% chance to get 10 coins)
+        if random.random() < 0.5:
+            coins_gained = 10
+            profile.coins += coins_gained
+        
+        # HP Recovery: +2 HP per task, but max +10 HP/day
+        if profile.daily_hp_healed < 10:
+            hp_to_heal = min(2, 10 - profile.daily_hp_healed)
+            profile.hp = min(100, profile.hp + hp_to_heal)
+            profile.daily_hp_healed += hp_to_heal
+            hp_gained = hp_to_heal
+    else:
+        # Daily cap reached - no rewards
+        cap_reached = True
+    
+    # Mark task as completed
     task.status = 'completed'
     task.completed_at = timezone.now()
     task.save()
-
-    profile = request.user.profile
-    profile.exp += task.difficulty
-    leveled_up = profile.check_level_up()
+    
+    # Level Up check
+    leveled_up = False
+    if xp_gained > 0:
+        leveled_up = profile.check_level_up()
+        if leveled_up:
+            # Instant heal to 100 HP on level up
+            profile.hp = 100
+    
     profile.save()
 
     next_level_exp = profile.get_next_level_exp()
     exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
+    hp_percentage = round((profile.hp / 100) * 100, 2)
 
     return JsonResponse({
         'status': 'success',
@@ -244,18 +381,106 @@ def complete_task(request, task_id):
         },
         'new_exp': profile.exp,
         'new_level': profile.level,
+        'new_hp': profile.hp,
+        'new_coins': profile.coins,
         'exp_percentage': exp_percentage,
+        'hp_percentage': hp_percentage,
         'next_level_exp': next_level_exp,
         'leveled_up': leveled_up,
-        'xp_gained': task.difficulty,
+        'xp_gained': xp_gained,
+        'coins_gained': coins_gained,
+        'hp_gained': hp_gained,
+        'cap_reached': cap_reached,
+        'daily_xp_count': profile.daily_xp_count,
     })
 
 @login_required
 @require_POST
 def delete_task(request, task_id):
+    """
+    STEP 3: Delete Task Penalty
+    - If deleting an active (pending) task, deduct 10 HP
+    - Check for game over after HP deduction
+    """
     task = get_object_or_404(Task, id=task_id, user=request.user)
+    
+    profile = request.user.profile
+    hp_lost = 0
+    game_over = False
+    
+    # Penalty for deleting active quest
+    if task.status == 'pending':
+        profile.hp -= 10
+        hp_lost = 10
+        profile.save()
+        
+        # Check for game over
+        game_over = check_game_over(profile)
+    
     task.delete()
-    return JsonResponse({'status': 'success', 'quest_id': task_id})
+    
+    hp_percentage = round((profile.hp / 100) * 100, 2)
+    
+    return JsonResponse({
+        'status': 'success',
+        'quest_id': task_id,
+        'hp_lost': hp_lost,
+        'new_hp': profile.hp,
+        'hp_percentage': hp_percentage,
+        'game_over': game_over,
+        'new_level': profile.level,
+        'new_exp': profile.exp,
+        'new_coins': profile.coins,
+    })
+
+
+@login_required
+@require_POST
+def extend_deadline(request, task_id):
+    """
+    STEP 4: Extend Deadline via Coins
+    - Max 3 extensions allowed per task
+    - Cost scaling: 1st = 2 coins, 2nd = 5 coins, 3rd = 10 coins
+    - Adds +1 day to due_date
+    """
+    task = get_object_or_404(Task, id=task_id, user=request.user, status='pending')
+    profile = request.user.profile
+    
+    # Check max extensions
+    if task.deadline_extensions >= 3:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Maximum extensions (3) reached for this task.'
+        }, status=400)
+    
+    # Cost scaling
+    cost_map = {0: 2, 1: 5, 2: 10}
+    cost = cost_map[task.deadline_extensions]
+    
+    # Check if user has enough coins
+    if profile.coins < cost:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Not enough coins. Need {cost} coins, you have {profile.coins}.'
+        }, status=400)
+    
+    # Deduct coins and extend deadline
+    profile.coins -= cost
+    profile.save()
+    
+    task.due_date += timedelta(days=1)
+    task.deadline_extensions += 1
+    task.save()
+    
+    return JsonResponse({
+        'status': 'success',
+        'quest_id': task.id,
+        'new_due_date': task.due_date.strftime('%Y-%m-%d'),
+        'new_coins': profile.coins,
+        'cost': cost,
+        'extensions_used': task.deadline_extensions,
+        'extensions_remaining': 3 - task.deadline_extensions,
+    })
 
 @login_required
 @require_POST

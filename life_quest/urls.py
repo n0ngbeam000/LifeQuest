@@ -32,6 +32,7 @@ urlpatterns = [
     path('complete/<int:task_id>/', views.complete_task, name='complete_task'),
     path('delete/<int:task_id>/', views.delete_task, name='delete_task'),
     path('uncomplete_task/<int:task_id>/', views.uncomplete_task, name='uncomplete_task'),
+    path('extend-deadline/<int:task_id>/', views.extend_deadline, name='extend_deadline'),
     path('leaderboard/', views.leaderboard_view, name='leaderboard'),
     path('completed/', views.completed_quests_view, name='completed_quests'),
 

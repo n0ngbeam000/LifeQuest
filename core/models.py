@@ -2,12 +2,22 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 # --- 1. User Profile (ระบบเก็บเลเวลและ Avatar) ---
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     exp = models.IntegerField(default=0)
     level = models.IntegerField(default=1)
+    
+    # RPG Mechanics - HP and Coins
+    hp = models.IntegerField(default=100)
+    coins = models.IntegerField(default=0)
+    
+    # Daily Limits Tracking
+    daily_xp_count = models.IntegerField(default=0)  # Track daily XP earned (max 678)
+    daily_hp_healed = models.IntegerField(default=0)  # Track daily HP healed (max 10)
+    last_daily_reset = models.DateField(default=timezone.now)  # Last reset date
     
     def get_next_level_exp(self):
         """สูตรคำนวณ EXP ที่ต้องใช้: เลเวลปัจจุบัน * 100"""
@@ -78,6 +88,11 @@ class Task(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)  # set when task is completed
+    
+    # Deadline and Penalty System
+    due_date = models.DateField()  # Required deadline for the task
+    deadline_extensions = models.IntegerField(default=0)  # Track extension purchases (max 3)
+    last_damage_date = models.DateField(null=True, blank=True)  # Track overdue damage application
 
     def __str__(self):
         return f"{self.title} ({self.get_difficulty_display()})"
