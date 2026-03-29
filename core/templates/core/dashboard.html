@@ -47,6 +47,28 @@
             <div class="exp-next" id="exp-next">{{ exp_remaining }} EXP for next level</div>
         </div>
 
+        <!-- HP Progress Bar -->
+        <div class="hp-section">
+            <div class="hp-label">
+                <span><span class="heart-icon">❤️</span> HP</span>
+                <span class="hp-values" id="hp-values">{{ user.profile.hp }}/100</span>
+            </div>
+            <div class="hp-bar-container">
+                <div class="hp-bar-fill" id="hp-bar-fill" style="width: {{ user.profile.hp }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Coins Card -->
+        <div class="coins-card">
+            <div class="coins-icon-wrapper">
+                <i class="fas fa-coins coins-icon"></i>
+            </div>
+            <div class="coins-info">
+                <span class="coins-label">Coins</span>
+                <span class="coins-value" id="coins-value">{{ user.profile.coins }}</span>
+            </div>
+        </div>
+
         <!-- Navigation Menu -->
         <nav class="nav-menu">
             <div class="nav-item" title="Your active quests">
@@ -362,6 +384,28 @@
             </div>
             <div class="exp-bar-container">
                 <div class="exp-bar-fill" style="width: {{ xp_percentage|default:0 }}%;"></div>
+            </div>
+        </div>
+
+        <!-- HP mini-bar -->
+        <div class="mobile-menu-hp">
+            <div class="hp-label">
+                <span><span class="heart-icon">❤️</span> HP</span>
+                <span class="hp-values">{{ user.profile.hp }}/100</span>
+            </div>
+            <div class="hp-bar-container">
+                <div class="hp-bar-fill" style="width: {{ user.profile.hp }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Coins display -->
+        <div class="mobile-menu-coins">
+            <div class="coins-icon-wrapper">
+                <i class="fas fa-coins coins-icon"></i>
+            </div>
+            <div class="coins-info">
+                <span class="coins-label">Coins</span>
+                <span class="coins-value">{{ user.profile.coins }}</span>
             </div>
         </div>
 

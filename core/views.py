@@ -304,10 +304,11 @@ def add_task(request):
 @require_POST
 def complete_task(request, task_id):
     """
-    STEP 2: Task Completion Logic
+    STEP 2: Task Completion Logic with Coin Exploit Fix
     - Reset daily limits if new day
     - Check daily XP cap (678)
-    - Award XP and random coin drop (10 coins with random chance)
+    - Award XP and random coin drop (10 coins with 50% chance)
+    - Save coins_earned to task to prevent farming exploit
     - HP recovery (+2 HP per task, max +10/day, cap at 100)
     - Level up and instant heal to 100 HP
     """
@@ -354,6 +355,9 @@ def complete_task(request, task_id):
     # Mark task as completed
     task.status = 'completed'
     task.completed_at = timezone.now()
+    
+    # 🔒 COIN EXPLOIT FIX: Save exact coins earned to prevent farming
+    task.coins_earned = coins_gained
     task.save()
     
     # Level Up check
@@ -369,6 +373,21 @@ def complete_task(request, task_id):
     next_level_exp = profile.get_next_level_exp()
     exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
     hp_percentage = round((profile.hp / 100) * 100, 2)
+    
+    # Build success message
+    message_parts = [f"✅ Quest Completed!"]
+    if xp_gained > 0:
+        message_parts.append(f"+{xp_gained} XP")
+    if coins_gained > 0:
+        message_parts.append(f"+{coins_gained} Coins 💰")
+    if hp_gained > 0:
+        message_parts.append(f"+{hp_gained} HP ❤️")
+    if leveled_up:
+        message_parts.append(f"🎉 Level Up! Now Lv.{profile.level}")
+    if cap_reached:
+        message_parts = ["⚠️ Daily XP cap reached (678/678). Task completed but no rewards."]
+    
+    message = " | ".join(message_parts)
 
     return JsonResponse({
         'status': 'success',
@@ -392,6 +411,7 @@ def complete_task(request, task_id):
         'hp_gained': hp_gained,
         'cap_reached': cap_reached,
         'daily_xp_count': profile.daily_xp_count,
+        'message': message,
     })
 
 @login_required
@@ -485,20 +505,37 @@ def extend_deadline(request, task_id):
 @login_required
 @require_POST
 def uncomplete_task(request, task_id):
+    """
+    🔒 COIN EXPLOIT FIX: Undo task and deduct EXACT coins earned
+    - Remove XP gained from this task
+    - Deduct EXACT coins that were earned (task.coins_earned)
+    - Reset coins_earned to 0
+    - Return task to pending state
+    """
     task = get_object_or_404(Task, id=task_id, user=request.user)
 
     if task.status != 'completed':
         return JsonResponse({'status': 'error', 'message': 'Task is not completed.'}, status=400)
 
     profile = request.user.profile
+    
+    # Remove XP
     profile.remove_exp(task.difficulty)
-
+    
+    # 🔒 COIN EXPLOIT FIX: Deduct EXACT coins that this task gave
+    coins_lost = task.coins_earned
+    profile.coins = max(0, profile.coins - coins_lost)  # Don't go below 0
+    profile.save()
+    
+    # Reset task state
     task.status = 'pending'
     task.completed_at = None
+    task.coins_earned = 0  # Reset coins tracker
     task.save()
 
     next_level_exp = profile.get_next_level_exp()
     exp_percentage = round((profile.exp / next_level_exp) * 100, 2)
+    hp_percentage = round((profile.hp / 100) * 100, 2)
 
     # After this undo the completed list shows at most 3 tasks.
     # Fetch the 3rd remaining completed task (index 2) so the frontend
@@ -514,6 +551,14 @@ def uncomplete_task(request, task_id):
             'difficulty': replacement.difficulty,
             'completed_at': replacement.completed_at.strftime('%b %d, %I:%M %p'),
         }
+    
+    # Build message
+    message_parts = ["⏪ Quest Undone"]
+    if task.difficulty > 0:
+        message_parts.append(f"-{task.difficulty} XP")
+    if coins_lost > 0:
+        message_parts.append(f"-{coins_lost} Coins 💰")
+    message = " | ".join(message_parts)
 
     return JsonResponse({
         'status': 'success',
@@ -527,10 +572,16 @@ def uncomplete_task(request, task_id):
         'next_completed': next_completed,
         'new_exp': profile.exp,
         'new_level': profile.level,
+        'new_hp': profile.hp,
+        'new_coins': profile.coins,
         'exp_percentage': exp_percentage,
+        'hp_percentage': hp_percentage,
         'next_level_exp': next_level_exp,
         'xp_lost': task.difficulty,
+        'coins_lost': coins_lost,
+        'message': message,
     })
+
 
 
 @login_required(login_url='login')

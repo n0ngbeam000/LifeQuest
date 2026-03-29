@@ -93,6 +93,9 @@ class Task(models.Model):
     due_date = models.DateField()  # Required deadline for the task
     deadline_extensions = models.IntegerField(default=0)  # Track extension purchases (max 3)
     last_damage_date = models.DateField(null=True, blank=True)  # Track overdue damage application
+    
+    # Coin Exploit Fix: Track exact coins earned to prevent farming
+    coins_earned = models.IntegerField(default=0)  # Exact coins this task gave
 
     def __str__(self):
         return f"{self.title} ({self.get_difficulty_display()})"

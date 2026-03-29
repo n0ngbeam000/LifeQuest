@@ -266,11 +266,13 @@ function completeQuest(btn) {
                         updateCompletedCount(1);
                     }, 500);
                 }
+                
+                // 🎯 UPDATE REAL-TIME STATS (XP, HP, Coins)
                 updatePlayerStats(data);
-                const msg = data.leveled_up
-                    ? `LEVEL UP! You reached Level ${data.new_level}! ★`
-                    : `Quest Complete! +${data.xp_gained} XP`;
-                showToast(msg, 'success', 4000);
+                
+                // 🎉 SHOW TOAST with full message from backend
+                console.log('🎉 Toast message:', data.message);
+                showToast(data.message || `Quest Complete! +${data.xp_gained} XP`, 'success', 4000);
             }
         })
         .catch(err => {
@@ -392,8 +394,12 @@ function undoQuest(btn) {
                     activeList.insertAdjacentHTML('afterbegin', buildActiveQuestHTML(data.quest));
                 }
                 updateActiveCount(1);
+                
+                // 🎯 UPDATE REAL-TIME STATS (XP, HP, Coins)
                 updatePlayerStats(data);
-                showToast(`Quest reverted! -${data.xp_lost} XP`, 'info', 3000);
+                
+                // 🎉 SHOW TOAST with message from backend (includes coins deducted)
+                showToast(data.message || `Quest reverted! -${data.xp_lost} XP`, 'info', 3000);
             }
         })
         .catch(err => {
@@ -600,6 +606,11 @@ function getCsrfToken() {
  * @param {Object} data - JSON response from complete_task view
  */
 function updatePlayerStats(data) {
+    // 🔍 DEBUG: ตรวจสอบข้อมูลที่ได้รับ
+    console.log('📊 Updating player stats:', data);
+    console.log('💰 New coins:', data.new_coins);
+    console.log('❤️ New HP:', data.new_hp);
+    
     const levelBadge = document.getElementById('level-badge');
     const expNext    = document.getElementById('exp-next');
 
@@ -618,6 +629,41 @@ function updatePlayerStats(data) {
     document.querySelectorAll('.exp-bar-fill').forEach(el => {
         el.style.width = `${data.exp_percentage}%`;
     });
+    
+    // 🎯 UPDATE HP (if provided)
+    if (data.new_hp !== undefined) {
+        console.log('✅ Updating HP to:', data.new_hp);
+        document.querySelectorAll('.hp-values').forEach(el => {
+            el.textContent = `${data.new_hp}/100`;
+        });
+        document.querySelectorAll('.hp-bar-fill').forEach(el => {
+            el.style.width = `${data.new_hp}%`;
+        });
+    }
+    
+    // 💰 UPDATE COINS (if provided)
+    if (data.new_coins !== undefined) {
+        console.log('✅ Updating coins to:', data.new_coins);
+        const coinsElements = document.querySelectorAll('.coins-value');
+        console.log('💰 Found coins elements:', coinsElements.length);
+        
+        coinsElements.forEach(el => {
+            const oldCoins = parseInt(el.textContent) || 0;
+            console.log('Old coins:', oldCoins, 'New coins:', data.new_coins);
+            el.textContent = data.new_coins;
+            
+            // Visual feedback: scale up briefly if coins increased
+            if (data.new_coins > oldCoins) {
+                el.style.transform = 'scale(1.2)';
+                el.style.transition = 'transform 0.3s ease';
+                setTimeout(() => {
+                    el.style.transform = 'scale(1)';
+                }, 300);
+            }
+        });
+    } else {
+        console.warn('⚠️ new_coins is undefined!');
+    }
 }
 
 /* ========== KEYBOARD SHORTCUTS ========== */
